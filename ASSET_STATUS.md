@@ -4,4 +4,8 @@
 - O D6 recebe apenas redução visual por CSS (`scale(.82)`).
 - `assets/ui/chat-icon.png`: cópia derivada do D20 original com margem transparente adicional para impedir clipping no ícone do Owlbear; o asset de dado usado nas rolagens não é substituído.
 - Chat não redesenha os dados e não usa fallback SVG.
-- Webfonts são instaladas pelo usuário com `prepare_fonts.py` antes do deploy.
+- Webfonts estão incorporadas em `fonts.css` e são servidas diretamente pelo deploy.
+
+
+## FONTES EMBUTIDAS — HOTFIX v0.6.2
+Girassol e Arpona (Light, Regular e Bold) estão incorporadas diretamente em `fonts.css` como webfonts WOFF2, derivadas dos assets de fonte fornecidos pelo proprietário. O deploy não depende de fontes instaladas no dispositivo e não requer etapa local de instalação de fontes.

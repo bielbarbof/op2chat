@@ -4,10 +4,10 @@
   "manifest_version": 1,
   "description": "Chat comunitário do playtest de Ordem Paranormal RPG 2 com rolagens e histórico persistente.",
   "author": "Ferramenta comunitária não oficial",
-  "icon": "/assets/ui/chat-icon.png",
+  "icon": "/assets/ui/chat-icon-d20.png",
   "action": {
     "title": "OP2 Playtest Chat",
-    "icon": "/assets/ui/chat-icon.png",
+    "icon": "/assets/ui/chat-icon-d20.png",
     "popover": "/",
     "height": 800,
     "width": 450
