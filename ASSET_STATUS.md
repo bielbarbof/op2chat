@@ -1,6 +1,8 @@
-# Assets — v0.5.0
+# Assets — v0.5.1 Recovery
 
-- d4/d6/d8/d10/d12/d20: silhuetas chapadas reconstruídas a partir da referência visual do Playtest fornecida pelo usuário.
-- Ícone do Chat: d20 com numeral 20.
-- As formas de dados são usadas em cards, rolador e demais componentes.
-- Fontes: ver `FONT_SETUP.md`.
+- `assets/dice/d4.png`, `d6.png`, `d8.png`, `d10.png`, `d12.png`, `d20.png`: cópias byte a byte dos seis PNGs originais fornecidos neste chat.
+- `assets/tokens/*.png`: tokens dos cinco personagens, usados quando necessário pela integração.
+- O ícone do Chat usa `assets/dice/d20.png`.
+
+Não há fallback SVG para os dados.
+- `assets/portraits/*.jpg`: referências de retrato compartilhadas pelo modelo de personagens; mantidas para evitar referências quebradas entre componentes integrados.

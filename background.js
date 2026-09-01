@@ -16,14 +16,28 @@ async function assignedCharacter(senderId){
   return id?CHARACTERS[id]:null;
 }
 
+const ALLOWED_DICE=new Set([4,6,8,10,12,20]);
+const clampNumber=(value,min,max,fallback=0)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback};
+function sanitizeSimpleRoll(raw={}){
+  const sides=ALLOWED_DICE.has(Number(raw.sides))?Number(raw.sides):20;
+  const values=Array.isArray(raw.values)?raw.values.slice(0,12).map(v=>Math.trunc(clampNumber(v,1,sides,1))):[];
+  const bonus=Math.trunc(clampNumber(raw.bonus,-999,999,0));
+  return {label:String(raw.label||'Rolagem livre').slice(0,80),sides,count:values.length||Math.trunc(clampNumber(raw.count,1,12,1)),bonus,values,total:Math.trunc(clampNumber(raw.total,-9999,9999,values.reduce((a,b)=>a+b,0)+bonus)),createdAt:Number(raw.createdAt||Date.now())};
+}
+function sanitizeTestResult(raw={}){
+  const dice=Array.isArray(raw.dice)?raw.dice.slice(0,4).map(d=>{const sides=ALLOWED_DICE.has(Number(d?.sides))?Number(d.sides):4;return {index:Math.trunc(clampNumber(d?.index,0,3,0)),sides,source:String(d?.source||`d${sides}`).slice(0,72),kind:String(d?.kind||'extra').slice(0,24),value:Math.trunc(clampNumber(d?.value,1,sides,1))}}):[];
+  const selectedIndexes=Array.isArray(raw.selectedIndexes)?raw.selectedIndexes.filter(i=>Number.isInteger(i)&&i>=0&&i<dice.length).slice(0,3):[];
+  return {label:String(raw.label||'Teste').slice(0,110),dice,selectedIndexes,total:Math.trunc(clampNumber(raw.total,-9999,9999,0)),success:raw.success===true?true:raw.success===false?false:null,criticalSuccess:Boolean(raw.criticalSuccess),criticalFailure:Boolean(raw.criticalFailure),createdAt:Number(raw.createdAt||Date.now())};
+}
+
 function cleanEntry(raw,sender,character){
   const type=raw?.type==='test'||raw?.type==='simple-roll'?'roll':'message';
   const base={id:String(raw?.id||makeId()),createdAt:Number(raw?.createdAt||Date.now()),authorId:sender.id,
     authorName:character?.name || (sender.role==='GM'?'Mestre':sender.name||'Jogador'),
-    characterId:character?.id||null,accent:character?.accent||(sender.role==='GM'?'#7757c8':raw?.accent||sender.color||'#c8c1b5')};
+    characterId:character?.id||null,accent:character?.accent||(sender.role==='GM'?'#7757c8':sender.color||'#c8c1b5')};
   if(type==='message') return {...base,type:'message',text:String(raw?.text||'').slice(0,MAX_MESSAGE_LENGTH)};
-  if(raw?.type==='simple-roll') return {...base,type:'simple-roll',roll:raw.roll||{}};
-  return {...base,type:'test',result:raw?.result||{}};
+  if(raw?.type==='simple-roll') return {...base,type:'simple-roll',roll:sanitizeSimpleRoll(raw.roll||{})};
+  return {...base,type:'test',result:sanitizeTestResult(raw?.result||{})};
 }
 
 async function sceneReady(){try{return await OBR.scene.isReady()}catch{return false}}

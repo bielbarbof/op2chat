@@ -1,18 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,300;0,400;0,700;0,800;0,900;1,300;1,700&family=Girassol&display=swap');
-
-/*
-  OP2 v0.5.0: as fontes deixam de depender do computador do jogador.
-  Para usar Arpona de forma exata em todos os aparelhos, hospede os WOFF2 licenciados
-  nestes caminhos. Se os arquivos não estiverem presentes, Bitter é o fallback web
-  consistente em desktop/mobile.
-*/
-@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-light.woff2') format('woff2');font-display:swap;font-weight:300;font-style:normal}
-@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.woff2') format('woff2');font-display:swap;font-weight:400;font-style:normal}
-@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.woff2') format('woff2');font-display:swap;font-weight:700 900;font-style:normal}
+@font-face{font-family:'OP2 Girassol';src:url('./assets/fonts/girassol-regular.ttf') format('truetype');font-display:swap;font-weight:400;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-light.otf') format('opentype');font-display:swap;font-weight:300;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:400;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:500;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:600;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:700;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:800;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:900;font-style:normal}
 :root{
-  --font-display:'Girassol',Georgia,serif;
-  --font-heading:'Girassol','OP2 Arpona','Bitter',Georgia,serif;
-  --font-button:'OP2 Arpona','Bitter',Georgia,serif;
-  --font-body:'OP2 Arpona','Bitter',Georgia,serif;
-  --font-ui:'OP2 Arpona','Bitter',Georgia,serif;
+  --font-display:'OP2 Girassol',Georgia,serif;
+  --font-heading:'OP2 Arpona',Georgia,serif;
+  --font-button:'OP2 Arpona',Arial,sans-serif;
+  --font-body:'OP2 Arpona',Georgia,'Times New Roman',serif;
+  --font-ui:'OP2 Arpona',Arial,sans-serif;
+  --font-roll:'OP2 Arpona',Arial,sans-serif;
 }
