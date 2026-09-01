@@ -63,7 +63,7 @@ function freeRoll(){const bonus=Number($('#freeBonus').value||0);const roll=roll
 function setTestsOpen(open){state.testsOpen=open;$('#app').classList.toggle('tests-open',open);$('#testPanel').setAttribute('aria-hidden',String(!open));if(OBR.isAvailable)OBR.action.setWidth(open?980:450).catch(()=>{})}
 
 function renderExtras(){
-  $('#extraDice').innerHTML=[4,6,8,10,12,20].map(s=>`<button data-extra="${s}">+D${s}</button>`).join('');
+  $('#extraDice').innerHTML=[4,6,8,10,12,20].map(s=>`<button data-extra="${s}">${dieImg(s)}<span>+D${s}</span></button>`).join('');
   $('#extraDice').querySelectorAll('[data-extra]').forEach(btn=>btn.addEventListener('click',()=>{if(state.manualExtras.length>=2){toast('O teste pode ter no máximo 4 dados.');return}state.manualExtras.push(Number(btn.dataset.extra));renderExtras()}));
   $('#queuedExtras').innerHTML=state.manualExtras.length?state.manualExtras.map((s,i)=>`<span class="extra-chip">+D${s}<button data-remove-extra="${i}">×</button></span>`).join(''):'<span style="font-size:10px;color:#7d766d">Nenhum dado extra.</span>';
   $('#queuedExtras').querySelectorAll('[data-remove-extra]').forEach(btn=>btn.addEventListener('click',()=>{state.manualExtras.splice(Number(btn.dataset.removeExtra),1);renderExtras()}));
@@ -83,7 +83,7 @@ function renderTestPanel(){
   const c=currentCharacter();$('#panelTitle').textContent=c?`${c.name} · ${c.profile}`:'TESTE MANUAL';
   if(!c){$('#quickSheet').classList.add('hidden');$('#manualTest').classList.remove('hidden');renderManual();return}
   $('#manualTest').classList.add('hidden');$('#quickSheet').classList.remove('hidden');const rt=runtimeFor(c)||defaultRuntimeState().characters[c.id];
-  const attrs=Object.entries(c.attributes).map(([k,v])=>{const sides=stepDie(v,rt.stepMods?.[k]||0);return `<div class="attr-card"><span>${attrLabel(k)}</span><b>D${sides}</b></div>`}).join('');
+  const attrs=Object.entries(c.attributes).map(([k,v])=>{const sides=stepDie(v,rt.stepMods?.[k]||0);return `<div class="attr-card"><span>${attrLabel(k)}</span><strong>${dieImg(sides)}<b>${sides}</b></strong></div>`}).join('');
   const pending=(rt.pendingDice||[]).length?`<div class="pending-note">${(rt.pendingDice||[]).map(d=>`+D${d.sides} ${escapeHtml(d.source)}`).join(' · ')}</div>`:'';
   const rows=SKILL_ORDER.map(key=>{const sk=c.skills[key];const attr=sk.attribute;const attrSides=stepDie(c.attributes[attr],rt.stepMods?.[attr]||0);return `<div class="skill-row"><span class="skill-name">${escapeHtml(labelSkill(c,key))}</span><span class="q-die">${dieImg(sk.die)}<b>${sk.die}</b></span><span class="plus">+</span><span class="q-die">${dieImg(attrSides)}<b>${attrSides}</b></span><span class="q-attr">${attrShort(attr)}</span><button class="skill-roll" data-skill="${key}">ROLAR</button></div>`}).join('');
   $('#quickSheet').innerHTML=`<div class="quick-identity"><h2>${escapeHtml(c.name)}</h2><span>${escapeHtml(c.occupation)} · Nível ${c.level}</span></div><div class="attribute-grid">${attrs}</div>${pending}<div class="skill-table">${rows}</div>`;

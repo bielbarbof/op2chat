@@ -1,3 +1,9 @@
 @font-face{font-family:'OP2 Agharti';src:local('Agharti'),local('Agharti Regular');font-display:swap}
 @font-face{font-family:'OP2 Arpona';src:local('Arpona'),local('Arpona Regular');font-display:swap}
-:root{--font-display:'OP2 Agharti','Girassol',Georgia,serif;--font-body:'OP2 Arpona',Georgia,'Times New Roman',serif;--font-ui:'OP2 Arpona',Arial,sans-serif}
+@font-face{font-family:'OP2 Girassol';src:local('Girassol'),local('Girassol Regular');font-display:swap}
+:root{
+  --font-display:'OP2 Agharti',Georgia,serif;
+  --font-heading:'OP2 Arpona',Georgia,serif;
+  --font-body:'OP2 Girassol','OP2 Arpona',Georgia,'Times New Roman',serif;
+  --font-ui:'OP2 Arpona',Arial,sans-serif;
+}
