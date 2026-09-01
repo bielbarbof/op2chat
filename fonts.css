@@ -10,5 +10,5 @@
   --font-body:'OP2 Arpona',Georgia,'Times New Roman',serif;
   --font-ui:'OP2 Arpona',Arial,sans-serif;
   /* Cards de rolagem + rolador ficam na tipografia visual já aprovada, sem serem afetados pela nova Arpona. */
-  --font-roll:Arial,sans-serif;
+  --font-roll:'OP2 Arpona',Arial,sans-serif;
 }

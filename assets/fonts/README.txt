@@ -1,2 +1,1 @@
-As fontes não estão incluídas neste pacote de distribuição.
-Antes do deploy, execute prepare_fonts.py usando os arquivos arpona.zip e Girassol.zip fornecidos pelo proprietário da extensão.
+As webfonts Girassol e Arpona usadas por esta extensão estão incorporadas em fonts.css e são servidas pelo próprio deploy. Nenhuma fonte local é necessária.
