@@ -1,0 +1,10 @@
+{
+  "name": "OP2 Playtest Chat",
+  "version": "0.1.0",
+  "manifest_version": 1,
+  "description": "Chat comunitário para o Playtest Alpha de Ordem Paranormal RPG 2, com testes, RA/RB, críticos e histórico persistente.",
+  "author": "Ferramenta comunitária não oficial",
+  "icon": "/icon.svg",
+  "action": {"title":"OP2 Playtest Chat","icon":"/icon.svg","popover":"/","height":800,"width":430},
+  "background_url": "/background.html"
+}
