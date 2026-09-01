@@ -1,5 +1,13 @@
-# OP2 Playtest Chat v0.4.0
+# OP2 Playtest Chat v0.5.0
 
-Extensão comunitária não oficial para Owlbear Rodeo com chat persistente, rolagens do playtest e integração com OP2 Playtest Fichas.
+Chat comunitário para Owlbear Rodeo voltado ao Playtest de Ordem Paranormal RPG 2.
 
-A v0.4.0 mantém a identidade visual aprovada do Chat, corrige responsividade do painel TESTES, integra efeitos temporários e simplifica a apresentação dos resultados.
+## Destaques
+- histórico persistente no Owlbear;
+- tema por personagem e tema roxo para o Mestre;
+- rolador livre d4/d6/d8/d10/d12/d20;
+- cards de rolagem integrados às Fichas;
+- botão `ABRIR FICHA` no lugar do antigo painel de Testes;
+- suporte responsivo desktop/mobile.
+
+Leia `FONT_SETUP.md` antes de publicar caso queira usar Arpona exatamente em todos os aparelhos.

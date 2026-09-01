@@ -1,11 +1,12 @@
-# Tipografia OP2
+# Fontes — OP2 v0.5.0
 
-A interface procura as famílias instaladas/localmente pelos nomes Agharti, Arpona (Light/Bold) e Girassol.
+A v0.5.0 não consulta mais `local("Arpona")` ou `local("Girassol")`, evitando que PC e celular renderizem interfaces diferentes.
 
-Hierarquia da v0.4.0:
-- Agharti: títulos principais, como PERSONAGENS e grandes nomes.
-- Arpona Bold: botões, tags, ribbons e qualquer forma com texto.
-- Girassol / Arpona Bold: títulos editoriais sem forma, conforme o contexto.
-- Arpona Light: texto corrido e apoio.
+- Girassol é carregada como webfont.
+- Bitter é o fallback web consistente para a família de apoio.
+- Para usar Arpona exatamente em todos os dispositivos, hospede seus WOFF2 licenciados em `assets/fonts/` com os nomes:
+  - `arpona-light.woff2`
+  - `arpona-regular.woff2`
+  - `arpona-bold.woff2`
 
-Os arquivos binários das fontes não fazem parte deste pacote.
+A extensão já aponta para esses caminhos. Os arquivos de fonte não fazem parte do pacote distribuído.

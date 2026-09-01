@@ -1,6 +1,6 @@
-# Assets — v0.4.0
+# Assets — v0.5.0
 
-- `assets/dice/d4.svg` ... `d20.svg`: geometria vetorial revisada para aproximar o padrão visual mostrado no playtest.
-- O ícone do Chat usa `assets/dice/d20.svg`.
-
-Nenhum arquivo binário de fonte é distribuído neste pacote.
+- d4/d6/d8/d10/d12/d20: silhuetas chapadas reconstruídas a partir da referência visual do Playtest fornecida pelo usuário.
+- Ícone do Chat: d20 com numeral 20.
+- As formas de dados são usadas em cards, rolador e demais componentes.
+- Fontes: ver `FONT_SETUP.md`.

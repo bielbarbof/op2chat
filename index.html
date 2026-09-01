@@ -13,7 +13,10 @@
     <section class="chat-column">
       <header class="app-header">
         <div class="brand"><h1>CHAT</h1></div>
-        <div class="header-actions"><span id="identity" class="identity-pill">...</span><button id="testToggle" class="test-toggle">TESTES</button></div>
+        <div class="header-actions">
+          <span id="identity" class="identity-pill">...</span>
+          <button id="openSheet" class="open-sheet">ABRIR FICHA</button>
+        </div>
       </header>
       <section id="feed" class="feed" aria-live="polite"></section>
       <section class="composer"><textarea id="message" maxlength="1800" placeholder="Escreva uma mensagem..."></textarea></section>
@@ -26,21 +29,6 @@
         </div>
       </section>
     </section>
-
-    <aside id="testPanel" class="test-panel" aria-hidden="true">
-      <header class="panel-header"><strong id="panelTitle">TESTES</strong><button id="testClose">×</button></header>
-      <section id="characterChooser" class="character-chooser hidden"></section>
-      <section class="test-toolbar">
-        <label><span>DT</span><input id="dtInput" type="number" value="7" min="1" max="99" /></label>
-        <label><span>ATRIBUTO</span><select id="attributeOverride"><option value="base">BASE DA PERÍCIA</option><option value="fisico">FÍSICO</option><option value="mente">MENTE</option><option value="emocao">EMOÇÃO</option></select></label>
-        <div class="step-control"><span>PASSO ATR.</span><button data-step="attr" data-delta="-1">−</button><b id="attrStep">0</b><button data-step="attr" data-delta="1">+</button></div>
-        <div class="step-control"><span>PASSO PER.</span><button data-step="skill" data-delta="-1">−</button><b id="skillStep">0</b><button data-step="skill" data-delta="1">+</button></div>
-      </section>
-      <section class="extra-section"><div id="extraDice" class="extra-dice"></div><div id="queuedExtras" class="queued-extras"></div></section>
-      <section id="quickSheet" class="quick-sheet"></section>
-      <section id="manualTest" class="manual-test hidden"></section>
-    </aside>
-
     <div id="loading" class="loading">SINCRONIZANDO...</div>
     <div id="toast" class="toast hidden"></div>
   </main>

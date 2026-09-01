@@ -20,7 +20,7 @@ function cleanEntry(raw,sender,character){
   const type=raw?.type==='test'||raw?.type==='simple-roll'?'roll':'message';
   const base={id:String(raw?.id||makeId()),createdAt:Number(raw?.createdAt||Date.now()),authorId:sender.id,
     authorName:character?.name || (sender.role==='GM'?'Mestre':sender.name||'Jogador'),
-    characterId:character?.id||null,accent:character?.accent||sender.color||'#c8c1b5'};
+    characterId:character?.id||null,accent:character?.accent||(sender.role==='GM'?'#7757c8':raw?.accent||sender.color||'#c8c1b5')};
   if(type==='message') return {...base,type:'message',text:String(raw?.text||'').slice(0,MAX_MESSAGE_LENGTH)};
   if(raw?.type==='simple-roll') return {...base,type:'simple-roll',roll:raw.roll||{}};
   return {...base,type:'test',result:raw?.result||{}};

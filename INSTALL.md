@@ -1,7 +1,8 @@
-# Atualização
+# Atualização via GitHub Desktop / Render
 
-Substitua os arquivos do repositório da extensão pelas versões deste pacote, faça commit/push e aguarde o redeploy do Render.
-
-Manifest de um deploy padrão: `https://SEU-SITE.onrender.com/manifest.json`.
-
-A v0.4.0 mantém os mesmos IDs e chaves de estado da linha anterior para preservar atribuições e recursos já salvos no Owlbear.
+1. Substitua os arquivos do repositório do OP2 Chat pelos desta pasta.
+2. Se possuir webfonts Arpona licenciadas, coloque os WOFF2 em `assets/fonts/` conforme `FONT_SETUP.md`.
+3. Commit: `OP2 Chat v0.5.0`.
+4. Push origin.
+5. Aguarde o redeploy automático do Render.
+6. O manifest permanece em `https://op2chat.onrender.com/manifest.json`.
