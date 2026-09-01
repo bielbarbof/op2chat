@@ -67,7 +67,7 @@ export const CHARACTERS = {
       pontaria:s(4,"fisico"), sobrevivencia:s(4,"mente"), tecnologia:s(6,"mente"), vigor:s(4,"fisico")
     },
     abilities: [
-      { id:"avaliacao", name:"Avaliação", text:"Você pode gastar uma ação e 2 PD para observar um ser ou um ambiente. Você recebe dois dados d4 que pode usar em testes relativos àquele ser ou ambiente, juntos em um teste ou separados em dois. Você não pode acumular mais do que dois dados bônus por esta habilidade.", action:"evaluation" },
+      { id:"avaliacao", name:"Avaliação", text:"Você pode gastar uma ação e 2 PD para observar um ser ou um ambiente. Você recebe 2d4 que pode usar em testes relativos àquele ser ou ambiente (você pode usá-los como quiser, recebendo +2d4 em um teste ou +d4 em dois testes). Você não pode acumular mais do que dois dados bônus por esta habilidade.", action:"evaluation" },
       { id:"foco-emocional", name:"Foco Emocional", text:"Quando faz um teste emocional, você pode gastar 2 PD para receber +d4 no teste.", action:"focusEmotional" }
     ]
   },
@@ -83,7 +83,7 @@ export const CHARACTERS = {
       pontaria:s(4,"fisico"), sobrevivencia:s(4,"mente"), tecnologia:s(8,"mente"), vigor:s(6,"fisico")
     },
     abilities: [
-      { id:"avaliacao", name:"Avaliação", text:"Você pode gastar uma ação e 2 PD para observar um ser ou um ambiente. Você recebe dois dados d4 que pode usar em testes relativos àquele ser ou ambiente, juntos em um teste ou separados em dois. Você não pode acumular mais do que dois dados bônus por esta habilidade.", action:"evaluation" },
+      { id:"avaliacao", name:"Avaliação", text:"Você pode gastar uma ação e 2 PD para observar um ser ou um ambiente. Você recebe 2d4 que pode usar em testes relativos àquele ser ou ambiente (você pode usá-los como quiser, recebendo +2d4 em um teste ou +d4 em dois testes). Você não pode acumular mais do que dois dados bônus por esta habilidade.", action:"evaluation" },
       { id:"conhecimento-tecnico", name:"Conhecimento Técnico", text:"Você possui uma perícia mental aumentada para d6 (este aumento já está contabilizado na ficha)." }
     ]
   },

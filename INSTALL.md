@@ -1,9 +1,9 @@
-# Instalação / atualização — v0.5.1 Recovery
+# Instalação / atualização — v0.6.0 Definitiva
 
-1. Substitua os arquivos do repositório da extensão Chat pelos deste pacote.
-2. Confira `FONT_SETUP.md` antes do deploy.
-3. Faça commit/push e aguarde o redeploy do serviço.
+1. Extraia este pacote no repositório da extensão Chat.
+2. Instale as webfonts com `prepare_fonts.py` conforme `FONT_SETUP.md`.
+3. Faça commit/push e aguarde o redeploy.
 4. Manifest de produção previsto: `https://op2chat.onrender.com/manifest.json`.
-5. No Owlbear Rodeo, mantenha o mesmo manifest para atualizar a extensão existente.
+5. Mantenha o mesmo manifest no Owlbear para atualizar a extensão existente.
 
-O Chat continua usando `com.op2.playtest/state-v1` para ler atribuições/efeitos compartilhados com Fichas e mantém as chaves de histórico da linha anterior.
+O Chat v0.6.0 foi preparado para operar junto das Fichas v0.6.0 usando as mesmas chaves/canais da linha Recovery.
