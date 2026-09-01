@@ -5,36 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#060606" />
   <title>OP2 Playtest // Chat</title>
+  <link rel="stylesheet" href="./fonts.css" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main id="app" class="app-shell">
     <section class="chat-column">
       <header class="app-header">
-        <div class="brand"><span>ORDEM PARANORMAL RPG 2</span><strong>PLAYTEST // CHAT</strong><small id="identity">Conectando...</small></div>
-        <button id="testToggle" class="test-toggle"><span>△</span> TESTES</button>
+        <div class="brand"><h1>CHAT</h1></div>
+        <div class="header-actions"><span id="identity" class="identity-pill">...</span><button id="testToggle" class="test-toggle">TESTES</button></div>
       </header>
-
       <section id="feed" class="feed" aria-live="polite"></section>
-
-      <section class="composer">
-        <div class="composer-label">MENSAGEM // ENTER ENVIA · SHIFT+ENTER QUEBRA LINHA</div>
-        <textarea id="message" maxlength="1800" placeholder="Escreva uma mensagem..."></textarea>
-      </section>
-
+      <section class="composer"><textarea id="message" maxlength="1800" placeholder="Escreva uma mensagem..."></textarea></section>
       <section class="dice-tray">
-        <div class="tray-head"><span>DADOS LIVRES</span><i></i></div>
         <div id="diceButtons" class="dice-buttons"></div>
         <div class="tray-controls">
           <div class="stepper"><button id="countMinus">−</button><b id="countValue">1</b><button id="countPlus">+</button></div>
-          <label><span>BÔNUS</span><input id="freeBonus" type="number" value="0" /></label>
+          <label class="bonus-field"><span>BÔNUS</span><input id="freeBonus" type="number" value="0" /></label>
           <button id="freeRoll" class="primary">ROLAR</button>
         </div>
       </section>
     </section>
 
     <aside id="testPanel" class="test-panel" aria-hidden="true">
-      <header class="panel-header"><div><span>REGRAS // TESTES</span><strong id="panelTitle">FICHA RÁPIDA</strong></div><button id="testClose">×</button></header>
+      <header class="panel-header"><strong id="panelTitle">TESTES</strong><button id="testClose">×</button></header>
       <section id="characterChooser" class="character-chooser hidden"></section>
       <section class="test-toolbar">
         <label><span>DT</span><input id="dtInput" type="number" value="7" min="1" max="99" /></label>
@@ -42,13 +36,13 @@
         <div class="step-control"><span>PASSO ATR.</span><button data-step="attr" data-delta="-1">−</button><b id="attrStep">0</b><button data-step="attr" data-delta="1">+</button></div>
         <div class="step-control"><span>PASSO PER.</span><button data-step="skill" data-delta="-1">−</button><b id="skillStep">0</b><button data-step="skill" data-delta="1">+</button></div>
       </section>
-      <section class="extra-section"><div class="section-line"><span>DADOS EXTRAS // MÁX. 4 DADOS NO TESTE</span><i></i></div><div id="extraDice" class="extra-dice"></div><div id="queuedExtras" class="queued-extras"></div></section>
+      <section class="extra-section"><div id="extraDice" class="extra-dice"></div><div id="queuedExtras" class="queued-extras"></div></section>
       <section id="quickSheet" class="quick-sheet"></section>
       <section id="manualTest" class="manual-test hidden"></section>
-      <footer class="panel-footer">RA = ROLAGEM ALTA · RB = ROLAGEM BAIXA · CRÍTICO = VALORES IGUAIS 6+</footer>
+      <footer class="panel-footer">RA = ROLAGEM ALTA · RB = ROLAGEM BAIXA</footer>
     </aside>
 
-    <div id="loading" class="loading">SINCRONIZANDO COM O OWLBEAR...</div>
+    <div id="loading" class="loading">SINCRONIZANDO...</div>
     <div id="toast" class="toast hidden"></div>
   </main>
   <script type="module" src="./app.js"></script>
