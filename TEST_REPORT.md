@@ -1,8 +1,12 @@
-# Test Report — OP2 Playtest Chat v0.2.0
+# Relatório de testes — OP2 Playtest Chat v0.4.0
 
-- `node --check`: todos os módulos JS passaram.
-- Manifest: versão 0.2.0, descrição abaixo de 128 caracteres, icon/action/background presentes.
-- Motor OP2: testes repetidos com 2 dados, RA/RB e DT válidos.
-- Persistência: canais e chaves de armazenamento da v0.1.0 foram preservados para não perder histórico/estado ao atualizar.
-- Permissão: jogadores só recebem a ficha atribuída no painel de Testes; GM mantém seleção completa/manual.
-- Assets: d4/d6/d8/d10/d12/d20 presentes nos caminhos esperados.
+## Validações executadas
+
+- Sintaxe de todos os módulos JavaScript: OK.
+- Manifest v0.4.0 e limites de descrição do Owlbear: OK.
+- Histórico persistente e chaves de armazenamento preservados.
+- Painel TESTES convertido para drawer/overlay sem alteração da largura da action: revisado em viewport estreita.
+- Jogador continua restrito à ficha atribuída; Mestre mantém acesso aos cinco personagens e teste manual.
+- Cards de resultado: símbolo do dado junto ao valor; RA/RB/DT removidos da apresentação; status/ícone presentes.
+- Integração de pendingDice com Foco Mental, Foco Emocional, Ímpeto e dados preparados: OK por estrutura.
+- Tipografia do card de resultado e rolador livre preservada; restante da UI usa a hierarquia nova.

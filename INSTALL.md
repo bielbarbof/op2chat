@@ -1,7 +1,7 @@
-# Atualização pelo GitHub Desktop / Render
-1. Substitua os arquivos do repositório pela pasta desta versão.
-2. GitHub Desktop: **Commit to main**.
-3. Clique em **Push origin**.
-4. O Render redeploya o Static Site automaticamente.
-5. Mantenha o header CORS no Render: `/*` → `Access-Control-Allow-Origin` → `*`.
-6. O manifest continua em `/manifest.json`; não é necessário remover e reinstalar a extensão se a URL não mudou.
+# Atualização
+
+Substitua os arquivos do repositório da extensão pelas versões deste pacote, faça commit/push e aguarde o redeploy do Render.
+
+Manifest de um deploy padrão: `https://SEU-SITE.onrender.com/manifest.json`.
+
+A v0.4.0 mantém os mesmos IDs e chaves de estado da linha anterior para preservar atribuições e recursos já salvos no Owlbear.

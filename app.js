@@ -18,11 +18,11 @@ function getAccent(){const id=assignedId();return id?CHARACTERS[id].accent:(stat
 function setTheme(){const c=assignedId()?CHARACTERS[assignedId()]:null;document.documentElement.style.setProperty('--accent',getAccent());$('#identity').textContent=c?`${c.name} · ${c.profile}`:(state.role==='GM'?'MESTRE':'SEM FICHA')}
 function toast(text){const el=$('#toast');el.textContent=text;el.classList.remove('hidden');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.add('hidden'),2800)}
 function canDelete(e){return state.role==='GM'||e.authorId===state.playerId}
-function resultState(r){if(r.criticalFailure)return['FALHA CRÍTICA','critical-failure'];if(r.criticalSuccess)return['SUCESSO CRÍTICO','critical-success'];if(r.success===false)return['FALHA','failure'];if(r.success===true)return['SUCESSO','success'];return['ROLAGEM','neutral']}
+function resultState(r){if(r.criticalFailure)return['FALHA CRÍTICA','critical-failure','×'];if(r.criticalSuccess)return['SUCESSO CRÍTICO','critical-success','✦'];if(r.success===false)return['FALHA','failure','×'];if(r.success===true)return['SUCESSO','success','✓'];return['ROLAGEM','neutral','•']}
 
 function resultCard(e){
-  const r=e.result||{};const [status,cls]=resultState(r);const del=canDelete(e)?`<button class="delete" data-delete="${escapeHtml(e.id)}" title="Apagar">×</button>`:'';
-  return `<article class="result-card ${cls}" style="--msg-accent:${e.accent||'#c6442b'}"><div class="result-head"><div><div class="result-author">${escapeHtml(e.authorName)}</div><div class="result-title">${escapeHtml(r.label||'Teste')}</div></div><div class="result-time">${relativeTime(e.createdAt)} ${del}</div></div><div class="result-dice">${(r.dice||[]).map(d=>`<div class="result-die"><div class="result-die-top">${dieImg(d.sides)}<span>${escapeHtml(d.source||`d${d.sides}`)}</span></div><strong>${d.value}</strong></div>`).join('')}</div><div class="result-main"><div class="result-total"><span>RESULTADO</span><strong>${r.total??0}</strong></div><div class="result-metric"><span>RA</span><strong>${r.ra??0}</strong></div><div class="result-metric"><span>RB</span><strong>${r.rb??0}</strong></div></div><div class="result-bottom"><span class="result-status">${status}</span><span class="result-dt">DT ${r.dt??'—'}</span></div>${(r.dice||[]).length>3?'<div class="result-note">Soma dos três maiores resultados.</div>':''}</article>`;
+  const r=e.result||{};const [status,cls,icon]=resultState(r);const del=canDelete(e)?`<button class="delete" data-delete="${escapeHtml(e.id)}" title="Apagar">×</button>`:'';
+  return `<article class="result-card ${cls}" style="--msg-accent:${e.accent||'#c6442b'}"><div class="result-head"><div><div class="result-author">${escapeHtml(e.authorName)}</div><div class="result-title">${escapeHtml(r.label||'Teste')}</div></div><div class="result-time">${relativeTime(e.createdAt)} ${del}</div></div><div class="result-dice">${(r.dice||[]).map(d=>`<div class="result-die"><span class="result-die-source">${escapeHtml(d.source||`d${d.sides}`)}</span><div class="result-die-value"><strong>${d.value}</strong>${dieImg(d.sides)}</div></div>`).join('')}</div><div class="result-summary"><div class="result-total"><span>RESULTADO</span><strong>${r.total??0}</strong></div><span class="result-status">${status}</span><span class="result-emblem" aria-hidden="true"><i>${icon}</i></span></div>${(r.dice||[]).length>3?'<div class="result-note">OS TRÊS MAIORES RESULTADOS FORAM SOMADOS.</div>':''}</article>`;
 }
 
 function simpleRollCard(e){
@@ -60,7 +60,7 @@ function renderDiceTray(){
   $('#diceButtons').querySelectorAll('[data-side]').forEach(btn=>btn.addEventListener('click',()=>{state.selectedSides=Number(btn.dataset.side);renderDiceTray()}));$('#countValue').textContent=state.count;
 }
 function freeRoll(){const bonus=Number($('#freeBonus').value||0);const roll=rollSimple({sides:state.selectedSides,count:state.count,bonus,label:`${state.count}d${state.selectedSides}${bonus?bonus>0?` + ${bonus}`:` - ${Math.abs(bonus)}`:''}`});sendEntry({id:makeId(),type:'simple-roll',createdAt:Date.now(),authorId:state.playerId,authorName:authorDisplay(),accent:getAccent(),roll})}
-function setTestsOpen(open){state.testsOpen=open;$('#app').classList.toggle('tests-open',open);$('#testPanel').setAttribute('aria-hidden',String(!open));if(OBR.isAvailable)OBR.action.setWidth(open?980:450).catch(()=>{})}
+function setTestsOpen(open){state.testsOpen=open;$('#app').classList.toggle('tests-open',open);$('#testPanel').setAttribute('aria-hidden',String(!open));}
 
 function renderExtras(){
   $('#extraDice').innerHTML=[4,6,8,10,12,20].map(s=>`<button data-extra="${s}">${dieImg(s)}<span>+D${s}</span></button>`).join('');
@@ -84,7 +84,8 @@ function renderTestPanel(){
   if(!c){$('#quickSheet').classList.add('hidden');$('#manualTest').classList.remove('hidden');renderManual();return}
   $('#manualTest').classList.add('hidden');$('#quickSheet').classList.remove('hidden');const rt=runtimeFor(c)||defaultRuntimeState().characters[c.id];
   const attrs=Object.entries(c.attributes).map(([k,v])=>{const sides=stepDie(v,rt.stepMods?.[k]||0);return `<div class="attr-card"><span>${attrLabel(k)}</span><strong>${dieImg(sides)}<b>${sides}</b></strong></div>`}).join('');
-  const pending=(rt.pendingDice||[]).length?`<div class="pending-note">${(rt.pendingDice||[]).map(d=>`+D${d.sides} ${escapeHtml(d.source)}`).join(' · ')}</div>`:'';
+  const pendingItems=[...(rt.pendingDice||[]).map(d=>`<span><b>${escapeHtml(d.source)}</b> · +${dieImg(d.sides)}</span>`),...(rt.evaluationDice?[`<span><b>AVALIAÇÃO</b> · ${rt.evaluationDice} ${dieImg(4)} DISPONÍVEL${rt.evaluationDice>1?'IS':''}</span>`]:[]),...(rt.readiness?[`<span><b>PRONTIDÃO ATIVA</b> · RODADA ANTECIPADA</span>`]:[])];
+  const pending=pendingItems.length?`<div class="pending-note">${pendingItems.join('')}</div>`:'';
   const rows=SKILL_ORDER.map(key=>{const sk=c.skills[key];const attr=sk.attribute;const attrSides=stepDie(c.attributes[attr],rt.stepMods?.[attr]||0);return `<div class="skill-row"><span class="skill-name">${escapeHtml(labelSkill(c,key))}</span><span class="q-die">${dieImg(sk.die)}<b>${sk.die}</b></span><span class="plus">+</span><span class="q-die">${dieImg(attrSides)}<b>${attrSides}</b></span><span class="q-attr">${attrShort(attr)}</span><button class="skill-roll" data-skill="${key}">ROLAR</button></div>`}).join('');
   $('#quickSheet').innerHTML=`<div class="quick-identity"><h2>${escapeHtml(c.name)}</h2><span>${escapeHtml(c.occupation)} · Nível ${c.level}</span></div><div class="attribute-grid">${attrs}</div>${pending}<div class="skill-table">${rows}</div>`;
   $('#quickSheet').querySelectorAll('[data-skill]').forEach(btn=>btn.addEventListener('click',()=>rollSkill(c,btn.dataset.skill)));

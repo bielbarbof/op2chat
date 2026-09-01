@@ -1,6 +1,11 @@
-# Fontes OP2
+# Tipografia OP2
 
-O CSS está preparado para procurar localmente as famílias **Girassol**, **Arpona** e **Agharti**.
-Os arquivos binários das fontes não são redistribuídos dentro deste pacote.
+A interface procura as famílias instaladas/localmente pelos nomes Agharti, Arpona (Light/Bold) e Girassol.
 
-Para máxima fidelidade, instale as fontes que você já possui no computador ou hospede suas cópias licenciadas e ajuste `fonts.css` com `@font-face` apontando para os arquivos do seu próprio repositório.
+Hierarquia da v0.4.0:
+- Agharti: títulos principais, como PERSONAGENS e grandes nomes.
+- Arpona Bold: botões, tags, ribbons e qualquer forma com texto.
+- Girassol / Arpona Bold: títulos editoriais sem forma, conforme o contexto.
+- Arpona Light: texto corrido e apoio.
+
+Os arquivos binários das fontes não fazem parte deste pacote.
