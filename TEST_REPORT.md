@@ -1,20 +1,23 @@
-# TEST REPORT — OP2 Playtest Chat v0.6.1
+# TEST REPORT — OP2 Playtest Chat v0.6.2
 
-## Regressão da base v0.6.0
+## Regressão funcional
 
-- Núcleo do Chat: **11/11**.
-- Verificações estáticas/integridade compartilhadas: **53/53**.
+- Sintaxe JavaScript de todos os módulos: aprovada.
+- Núcleo de sanitização, merge, chunking e limite de mensagem: **4/4** verificações executadas nesta build.
+- Funcionalidades v0.6.1 (rolador por ícones e limpeza global do Mestre) preservadas no código-base.
 
-## Testes específicos da v0.6.1
+## Verificações específicas da v0.6.2
 
-- Seis botões de dados presentes: aprovado.
-- Botões usam somente ícones, sem labels visuais redundantes: aprovado.
-- `aria-label` preservado para D4, D6, D8, D10, D12 e D20: aprovado.
-- Lixeira visível para o Mestre: aprovado.
-- Confirmação de limpeza: aprovado.
-- Cancelar a confirmação preserva o histórico: aprovado.
-- Confirmar a limpeza esvazia a interface imediatamente: aprovado.
-- Backend exige papel de Mestre: aprovado.
-- Persistência é limpa com `persist([])`: aprovado.
-- Evento de histórico limpo é enviado para todos: aprovado.
-- Cards de teste e rolagem livre comparados com a v0.6.0 e preservados: aprovado.
+- Manifest em 0.6.2: aprovado.
+- Manifest usa `assets/ui/chat-icon.png`: aprovado.
+- Ícone possui margem transparente segura superior/inferior/lateral: aprovado.
+- D4/D6/D8/D10/D12/D20 originais do Chat permanecem byte a byte iguais à v0.6.1.
+- D6 em `.82`: aprovado.
+- Girassol e Arpona Light/Regular/Medium/Bold declaradas: aprovado.
+- `prepare_fonts.py` inclui Arpona Medium e busca por basename: aprovado.
+- Bloco CSS dos cards/notificações de rolagem comparado com a v0.6.1 e preservado: aprovado.
+- Nenhum binário proprietário de fonte incluído no pacote distribuível.
+
+## Integridade compartilhada
+
+A bateria estática conjunta Fichas + Chat fechou em **33/33** verificações aprovadas antes do empacotamento.

@@ -1,8 +1,8 @@
 @font-face{font-family:'OP2 Girassol';src:url('./assets/fonts/girassol-regular.ttf') format('truetype');font-display:swap;font-weight:400;font-style:normal}
 @font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-light.otf') format('opentype');font-display:swap;font-weight:300;font-style:normal}
 @font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:400;font-style:normal}
-@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:500;font-style:normal}
-@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-regular.otf') format('opentype');font-display:swap;font-weight:600;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-medium.otf') format('opentype');font-display:swap;font-weight:500;font-style:normal}
+@font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-medium.otf') format('opentype');font-display:swap;font-weight:600;font-style:normal}
 @font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:700;font-style:normal}
 @font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:800;font-style:normal}
 @font-face{font-family:'OP2 Arpona';src:url('./assets/fonts/arpona-bold.otf') format('opentype');font-display:swap;font-weight:900;font-style:normal}
