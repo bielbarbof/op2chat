@@ -100,6 +100,11 @@ async function handle(event){
     cachedHistory=mergeEntries(cachedHistory,[entry]);await persist(cachedHistory);
     await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'persisted-entry',entry},{destination:'ALL'});return;
   }
+  if(d.type==='clear-history'){
+    if(sender.role!=='GM')return;
+    cachedHistory=[];await persist([]);
+    await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-cleared'},{destination:'ALL'});return;
+  }
   if(d.type==='delete'&&d.entryId){
     const entry=cachedHistory.find(e=>e.id===d.entryId);if(!entry)return;
     if(sender.role!=='GM'&&entry.authorId!==sender.id)return;

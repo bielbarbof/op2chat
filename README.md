@@ -1,14 +1,17 @@
-# OP2 Playtest Chat v0.6.0 — Definitiva
+# OP2 Playtest Chat v0.6.1
 
-Extensão comunitária não oficial para Owlbear Rodeo, integrada ao OP2 Playtest Fichas v0.6.0.
+Extensão comunitária não oficial para Owlbear Rodeo, integrada ao OP2 Playtest Fichas v0.6.1.
 
-## Inclui
+A v0.6.1 é um patch direto sobre a **v0.6.0 Definitiva**.
 
-- Chat persistente da sala.
-- Rolador livre com D4, D6, D8, D10, D12 e D20 originais.
-- Cards de testes enviados pelas fichas.
-- Integração ABRIR FICHA / VOLTAR AO CHAT.
-- Identidade roxa para controles do Mestre e cores semânticas independentes para sucesso/falha.
-- Card de rolagem com ícone do dado antes do valor e microespaçamento refinado entre horário e botão de exclusão.
+## Alterações desta versão
 
-A v0.6.0 mantém a estrutura recuperada e refinada na v0.5.1, sem reintroduzir as regressões da v0.5.0 rejeitada.
+- O seletor do rolador livre agora mostra apenas os seis ícones de dados. As labels D4/D6/D8/D10/D12/D20 foram removidas visualmente, mantendo `aria-label` e tooltip.
+- O Mestre recebeu um botão de lixeira para limpar todo o histórico do Chat.
+- A limpeza exige confirmação, remove mensagens e rolagens persistidas e sincroniza o histórico vazio para todos os participantes.
+- Jogadores não recebem o controle global de limpeza.
+- As notificações/cards de rolagem foram preservadas visualmente sem alterações.
+
+## Base
+
+A v0.6.0 Definitiva permanece a base canônica; a v0.6.1 aplica apenas refinamentos cirúrgicos de UI/UX e administração do Chat.

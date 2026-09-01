@@ -1,11 +1,14 @@
-# Changelog — v0.6.0 Definitiva
+# Changelog — OP2 Playtest Chat
 
-- Compatibilidade com OP2 Playtest Fichas v0.6.0.
-- D6 padronizado visualmente em relação aos demais dados.
-- Cards mostram o ícone do dado antes do valor rolado.
-- Área de resultado refinada para melhor alinhamento.
-- Pequeno espaçamento entre horário e botão `×`/exclusão.
-- Mestre permanece identificado por roxo nos controles neutros.
-- Cores semânticas de sucesso, falha e críticos permanecem independentes da cor do Mestre/personagem.
-- Tipografia aprovada dos cards e rolador preservada.
-- Nenhum retorno do antigo Teste Manual, RA/RB/DT ou fallbacks de dados.
+## 0.6.1
+
+- Rolador livre simplificado para exibir somente os ícones dos dados.
+- Acessibilidade preservada através de nomes internos e tooltips.
+- Novo botão de lixeira exclusivo do Mestre para limpar todo o histórico.
+- Confirmação obrigatória antes da limpeza global.
+- Limpeza remove a persistência e é sincronizada para todos os participantes.
+- Cards e notificações de rolagem preservados visualmente sem alterações.
+
+## 0.6.0
+
+Versão definitiva que estabeleceu a base canônica atual do projeto.

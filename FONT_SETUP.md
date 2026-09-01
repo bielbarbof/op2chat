@@ -1,4 +1,4 @@
-# Fontes da v0.6.0 Definitiva
+# Fontes da v0.6.1 Definitiva
 
 Os binários de Arpona/Girassol não fazem parte do pacote distribuível. Antes do deploy, use suas próprias cópias:
 
