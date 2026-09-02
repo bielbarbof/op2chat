@@ -557,3 +557,51 @@ button {
   .header-actions { width: 100%; justify-content: flex-start; flex-wrap: nowrap; }
   .open-sheet { margin-left: auto; }
 }
+
+/* v0.7.3: persistent left-side Chat surface. */
+html[data-surface="panel"],html[data-surface="panel"] body {
+  background: transparent;
+}
+html[data-surface="panel"] body {
+  border: 1px solid #302c28;
+  border-left-color: #403a34;
+  box-shadow: 14px 0 34px rgba(0,0,0,.42);
+}
+html[data-surface="panel"] .app-shell,
+html[data-surface="panel"] .chat-column {
+  height: 100%;
+  min-height: 0;
+}
+html[data-surface="panel"] .chat-column {
+  border-right: 1px solid #1e1c1a;
+}
+.panel-close {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  border: 1px solid #4a4540;
+  background: #090909;
+  color: #aaa399;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+}
+.panel-close:hover,.panel-close:focus-visible {
+  border-color: #d64035;
+  background: #2a0d0b;
+  color: #fff;
+  outline: none;
+}
+@media (max-width:510px) {
+  .panel-close { width:34px; height:34px; flex-basis:34px; font-size:17px; }
+}
+@media (max-width:460px) {
+  html[data-surface="panel"] .header-actions { gap:6px; }
+  html[data-surface="panel"] .panel-close { margin-left:0; }
+}

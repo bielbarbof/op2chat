@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.3
+
+- Substitui o Action Popover de Chat por um painel lateral persistente aberto através da API oficial de Popover do Owlbear Rodeo.
+- O clique na ação da extensão passa a alternar entre abrir e fechar o painel.
+- O painel usa altura disponível do viewport, permanece aberto ao interagir com a Room e adapta a largura para notebook, desktop e telas estreitas.
+- Adiciona fechamento direto no cabeçalho do Chat sem alterar histórico, DT, rolagens ou persistência.
+
 ## 0.7.2
 
 - Release de compatibilidade com Fichas v0.7.2; regras, DT, pool multidados, histórico e layout do Chat permanecem inalterados.

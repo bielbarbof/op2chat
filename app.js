@@ -4,6 +4,7 @@ import {rollOp2Test,rollSimple} from './roll.js';
 import {renderResultCard} from './roll-card.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,MAX_MESSAGE_LENGTH,escapeHtml,makeId,mergeEntries,relativeTime} from './chat-core.js';
 import {normalizeRuntimeState,SYNC_CHANNEL} from './core-shared.js';
+import {closeChatPanel,syncChatPanelSize} from './panel.js';
 
 const $=s=>document.querySelector(s);
 const SHEETS_BASE_URL='https://op2fichas.onrender.com';
@@ -11,6 +12,8 @@ const GM_ACCENT='#7757c8';
 const GM_ROSTER_MODAL='com.op2.playtest.chat/open-fichas';
 const SHEET_MODAL='com.op2.playtest.fichas/sheet';
 const DIE_SIDES=[4,6,8,10,12,20];
+const IS_PANEL=new URLSearchParams(location.search).get('surface')==='panel';
+document.documentElement.dataset.surface=IS_PANEL?'panel':'standalone';
 const state={role:'PLAYER',playerId:'preview',connectionId:'preview',roomState:defaultRuntimeState(),entries:[],historyParts:new Map(),pool:[],toastTimer:null,dtQueue:Promise.resolve(),pendingSharedMutations:new Map()};
 const dieImg=s=>`<img class="die-asset" src="./assets/dice/d${Number(s)}.png" alt="d${Number(s)}" />`;
 
@@ -32,17 +35,8 @@ function setTheme(){
   const identity=$('#identity');identity.textContent=c?c.profile:(state.role==='GM'?'MESTRE':'SEM FICHA');identity.style.setProperty('--profile-accent',c?.accent||(state.role==='GM'?GM_ACCENT:'#5f5a53'));
   $('#clearHistory')?.classList.toggle('hidden',state.role!=='GM');
   $('#openSheet').textContent=state.role==='GM'?'PERSONAGENS':'ABRIR FICHA';
+  $('#closePanel')?.classList.toggle('hidden',!IS_PANEL);
   renderDtControl();
-}
-async function sizeChatAction(){
-  if(!OBR.isAvailable)return;
-  try{
-    const [vw,vh]=await Promise.all([OBR.viewport.getWidth(),OBR.viewport.getHeight()]);
-    const desktop=vw>=900;
-    const width=desktop?Math.max(470,Math.min(560,Math.round(vw*.36))):Math.max(340,Math.min(470,Math.round(vw-20)));
-    const height=Math.max(440,Math.min(980,Math.round(vh-24)));
-    await Promise.all([OBR.action.setWidth(width),OBR.action.setHeight(height)]);
-  }catch{}
 }
 function toast(text){const el=$('#toast');el.textContent=text;el.classList.remove('hidden');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.add('hidden'),2800)}
 function canDelete(e){return state.role==='GM'||e.authorId===state.playerId}
@@ -133,10 +127,10 @@ async function setup(){
   renderDiceTray();renderFeed();
   $('#message').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitMessage()}});
   $('#freeRoll').addEventListener('click',freeRoll);$('#clearPool').addEventListener('click',()=>{state.pool=[];renderDiceTray()});
-  $('#openSheet').addEventListener('click',openSheet);$('#clearHistory').addEventListener('click',clearHistory);
+  $('#openSheet').addEventListener('click',openSheet);$('#clearHistory').addEventListener('click',clearHistory);$('#closePanel').addEventListener('click',()=>closeChatPanel());
   $('#dtInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitDt();e.currentTarget.blur()}if(e.key==='Escape'){e.currentTarget.value=state.roomState.testDt??'';e.currentTarget.blur()}});
   $('#dtInput').addEventListener('blur',commitDt);$('#clearDt').addEventListener('click',()=>{setRoomDt(null);$('#dtInput').value=''});
   if(!OBR.isAvailable){$('#loading').classList.add('hidden');state.role='GM';setTheme();return}
-  await new Promise(r=>OBR.onReady(r));[state.role,state.connectionId]=await Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]);state.playerId=OBR.player.id;const meta=await OBR.room.getMetadata();state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);if(Array.isArray(meta[RECENT_KEY]?.entries))mergeAndRender(meta[RECENT_KEY].entries);setTheme();await sizeChatAction();OBR.action.onOpenChange(open=>{if(open)sizeChatAction()});OBR.broadcast.onMessage(CHAT_CHANNEL,onChatEvent);OBR.broadcast.onMessage(SYNC_CHANNEL,onSharedSync);OBR.room.onMetadataChange(meta=>{if(meta[ROOM_STATE_KEY]){state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);setTheme()}if(Array.isArray(meta[RECENT_KEY]?.entries)){if(meta[RECENT_KEY].entries.length===0&&state.entries.length){state.entries=[];renderFeed()}else mergeAndRender(meta[RECENT_KEY].entries)}});await requestHistory();$('#loading').classList.add('hidden')
+  await new Promise(r=>OBR.onReady(r));[state.role,state.connectionId]=await Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]);state.playerId=OBR.player.id;const meta=await OBR.room.getMetadata();state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);if(Array.isArray(meta[RECENT_KEY]?.entries))mergeAndRender(meta[RECENT_KEY].entries);setTheme();if(IS_PANEL){await syncChatPanelSize();let lastW=0,lastH=0;const resync=async()=>{const w=window.innerWidth,h=window.innerHeight;if(w===lastW&&h===lastH)return;lastW=w;lastH=h;await syncChatPanelSize()};window.addEventListener('resize',resync,{passive:true});setInterval(()=>syncChatPanelSize(),1500)}OBR.broadcast.onMessage(CHAT_CHANNEL,onChatEvent);OBR.broadcast.onMessage(SYNC_CHANNEL,onSharedSync);OBR.room.onMetadataChange(meta=>{if(meta[ROOM_STATE_KEY]){state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);setTheme()}if(Array.isArray(meta[RECENT_KEY]?.entries)){if(meta[RECENT_KEY].entries.length===0&&state.entries.length){state.entries=[];renderFeed()}else mergeAndRender(meta[RECENT_KEY].entries)}});await requestHistory();$('#loading').classList.add('hidden')
 }
 setup().catch(e=>{console.error(e);$('#loading').textContent=`ERRO · ${e.message||e}`});
