@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#060606" />
   <title>OP2 Playtest // Chat</title>
-  <link rel="stylesheet" href="./fonts.css?v=0.6.5" />
-  <link rel="stylesheet" href="./styles.css?v=0.6.5" />
+  <link rel="stylesheet" href="./fonts.css?v=0.7.0" />
+  <link rel="stylesheet" href="./styles.css?v=0.7.0" />
+  <link rel="stylesheet" href="./roll-card.css?v=0.7.0" />
 </head>
 <body>
   <main id="app" class="app-shell">
@@ -14,8 +15,13 @@
       <header class="app-header">
         <div class="brand"><img class="header-license-seal" src="./assets/ui/community-license.png" alt="Selo da Licença da Comunidade" /><h1>CHAT</h1></div>
         <div class="header-actions">
-          <span id="identity" class="identity-pill">...</span>
+          <span id="identity" class="identity-pill profile-ribbon">...</span>
           <button id="clearHistory" class="clear-history hidden" type="button" aria-label="Limpar histórico" title="Limpar histórico"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Z"/></svg></button>
+          <div id="dtControl" class="dt-control hidden" title="DT atual da mesa">
+            <label for="dtInput">DT</label>
+            <input id="dtInput" type="number" inputmode="numeric" min="1" max="999" placeholder="—" aria-label="DT atual da mesa" />
+            <button id="clearDt" type="button" aria-label="Limpar DT" title="Limpar DT">×</button>
+          </div>
           <button id="openSheet" class="open-sheet">ABRIR FICHA</button>
         </div>
       </header>
@@ -23,8 +29,8 @@
       <section class="composer"><textarea id="message" maxlength="1800" placeholder="Escreva uma mensagem..."></textarea></section>
       <section class="dice-tray">
         <div id="diceButtons" class="dice-buttons"></div>
+        <div class="pool-summary"><span>SELEÇÃO</span><strong id="poolSummary">SELECIONE ATÉ 4 DADOS</strong><button id="clearPool" type="button">LIMPAR</button></div>
         <div class="tray-controls">
-          <div class="stepper"><button id="countMinus" aria-label="Diminuir quantidade">−</button><b id="countValue">1</b><button id="countPlus" aria-label="Aumentar quantidade">+</button></div>
           <label class="bonus-field"><span>BÔNUS</span><input id="freeBonus" type="number" value="0" /></label>
           <button id="freeRoll" class="primary">ROLAR</button>
         </div>

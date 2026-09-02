@@ -26,7 +26,9 @@ function normalizePendingDie(x) {
 export function normalizeRuntimeState(raw) {
   const base = defaultRuntimeState();
   if (!raw || typeof raw !== 'object') return base;
-  base.v = 2;
+  base.v = 3;
+  const dt = Number(raw.testDt);
+  base.testDt = Number.isFinite(dt) && dt > 0 ? Math.trunc(dt) : null;
   if (raw.assignments && typeof raw.assignments === 'object') {
     for (const id of Object.keys(CHARACTERS)) {
       const a = raw.assignments[id];

@@ -1,19 +1,18 @@
-# OP2 Playtest Chat — v0.6.5
+# OP2 Playtest Chat — v0.7.0
 
 Este é um conteúdo não oficial, publicado sob a Licença da Comunidade de Ordem Paranormal.
 
-
-Extensão gratuita de Chat para Owlbear Rodeo, integrada ao OP2 Playtest Fichas. Oferece mensagens, rolador livre, cards de testes, exclusão de mensagens, limpeza do histórico pelo Mestre e persistência do histórico da sala.
+Extensão gratuita de Chat para Owlbear Rodeo, integrada ao OP2 Playtest Fichas. Oferece mensagens, rolagens de testes com pools de até quatro dados, DT compartilhada controlada pelo Mestre, cards sincronizados e histórico persistente da sala.
 
 ## Instalação
 
-Hospede o conteúdo desta pasta em HTTPS e cadastre a URL do `manifest.json` no Owlbear Rodeo. Para abrir fichas diretamente pelo Chat, mantenha também a extensão OP2 Playtest Fichas instalada e hospedada no endereço configurado no projeto.
+Hospede o conteúdo desta pasta em HTTPS e cadastre a URL do `manifest.json` no Owlbear Rodeo. Para abrir e sincronizar fichas diretamente pelo Chat, mantenha também a extensão OP2 Playtest Fichas instalada.
 
 ## Uso
 
-Jogadores usam a identidade do personagem atribuído nas Fichas; o Mestre usa a identidade de Mestre. O Chat recebe testes feitos nas fichas e também permite rolagens livres de d4, d6, d8, d10, d12 e d20, com bônus opcional.
+O Mestre pode definir ou limpar a DT atual da mesa no cabeçalho. A DT é compartilhada com as Fichas e permanece ativa até ser alterada. Sem DT, rolagens comuns ficam neutras; críticos continuam sendo reconhecidos.
 
-O histórico recente é mantido nos metadados da sala e o histórico completo é persistido em itens ocultos da cena, conforme a arquitetura já utilizada na v0.6.3.
+No rolador, cada clique adiciona um dado à pool. É possível combinar d4, d6, d8, d10, d12 e d20, repetir tipos, remover unidades e usar bônus opcional. Testes usam no máximo quatro dados e somam no máximo os três maiores.
 
 ## Compatibilidade e privacidade
 

@@ -1,20 +1,25 @@
 # Changelog
 
+## 0.7.0
+
+- DT atual da mesa adicionada ao cabeçalho do Mestre e sincronizada com a extensão de Fichas.
+- Cards comuns só exibem sucesso ou falha quando existe DT definida; críticos continuam independentes da DT.
+- Sucesso crítico e falha crítica receberam estados de fundo verde-escuro e vermelho-escuro.
+- Rolador livre substituído por uma pool acumulativa de até quatro dados, com mistura e repetição de tipos.
+- Card de teste passou a compartilhar a mesma implementação visual utilizada pelas Fichas.
+- Cabeçalho passou a usar selo de perfil; o Mestre usa selo roxo e o botão de fichas passa a se chamar PERSONAGENS.
+- Integração com Ímpeto permite registrar automaticamente falhas inequívocas quando a Ficha está instalada.
+
 ## 0.6.5
 
 - Arpona SemiBold incorporada e aplicada no lugar dos antigos usos de Arpona Bold.
-- Selo da Licença da Comunidade movido do rodapé para o cabeçalho, à esquerda de CHAT.
-- Área útil do histórico ampliada com a remoção do rodapé informativo.
-- Popover do Chat passou a se dimensionar dinamicamente conforme o viewport do Owlbear, aproximando-se de um painel lateral de altura integral no desktop.
+- Selo da Licença da Comunidade movido para o cabeçalho, à esquerda de CHAT.
+- Área útil do histórico ampliada e popover dimensionado dinamicamente conforme o viewport do Owlbear.
 
-## 0.6.5
+## 0.6.4
 
-- Equalização óptica dos dados d4, d6, d8, d10, d12 e d20 no rolador e nos cards.
-- Controles intermediários ajustados para Arpona Medium, preservando os cards de rolagem aprovados.
-- Avisos de licença e documentação pública revisados.
-- Limpeza de arquivos internos e assets não utilizados.
-- Persistência, histórico e chaves de sincronização da v0.6.3 preservados.
+- Equalização óptica dos dados e revisão de tipografia, assets, documentação e persistência.
 
 ## 0.6.3
 
-- Base estável utilizada para esta release.
+- Base estável utilizada pelas releases seguintes.

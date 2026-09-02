@@ -11,7 +11,24 @@ export function randomInt(max) {
   return Math.floor(Math.random() * max) + 1;
 }
 
-export function rollOp2Test({ dice = [], dt = 7, label = 'Teste', selected = null } = {}) {
+export function classifyOp2Result(values = [], total = 0, dt = null) {
+  const normalizedValues = Array.isArray(values) ? values.map(Number).filter(Number.isFinite) : [];
+  const criticalFailure = normalizedValues.length > 0 && normalizedValues.every(v => v === 1);
+  const counts = new Map();
+  for (const value of normalizedValues) counts.set(value, (counts.get(value) || 0) + 1);
+  const criticalSuccess = !criticalFailure && [...counts.entries()].some(([value,count]) => value >= 6 && count >= 2);
+  const numericDt = Number(dt);
+  const hasDt = Number.isFinite(numericDt) && numericDt > 0;
+  const success = criticalSuccess ? true : criticalFailure ? false : hasDt ? Number(total) >= numericDt : null;
+  return {
+    dt: hasDt ? Math.trunc(numericDt) : null,
+    success,
+    criticalSuccess,
+    criticalFailure
+  };
+}
+
+export function rollOp2Test({ dice = [], dt = null, bonus = 0, label = 'Teste', selected = null } = {}) {
   const normalized = dice.slice(0,4).map((d, index) => ({
     index,
     sides: Math.max(4, Number(d.sides) || 4),
@@ -20,7 +37,9 @@ export function rollOp2Test({ dice = [], dt = 7, label = 'Teste', selected = nul
   }));
   const results = normalized.map(d => ({ ...d, value: randomInt(d.sides) }));
   const maxSum = Math.min(3, results.length);
-  let selectedIndexes = Array.isArray(selected) ? selected.filter(i => Number.isInteger(i) && i >= 0 && i < results.length).slice(0,maxSum) : [];
+  let selectedIndexes = Array.isArray(selected)
+    ? selected.filter(i => Number.isInteger(i) && i >= 0 && i < results.length).slice(0,maxSum)
+    : [];
   if (selectedIndexes.length !== maxSum) {
     selectedIndexes = [...results]
       .sort((a,b) => b.value - a.value || a.index - b.index)
@@ -28,28 +47,26 @@ export function rollOp2Test({ dice = [], dt = 7, label = 'Teste', selected = nul
       .map(x => x.index)
       .sort((a,b)=>a-b);
   }
-  const total = results.filter(r => selectedIndexes.includes(r.index)).reduce((sum,r)=>sum+r.value,0);
+  const numericBonus = Number.isFinite(Number(bonus)) ? Number(bonus) : 0;
+  const diceTotal = results.filter(r => selectedIndexes.includes(r.index)).reduce((sum,r)=>sum+r.value,0);
+  const total = diceTotal + numericBonus;
   const values = results.map(r=>r.value);
   const ra = values.length ? Math.max(...values) : 0;
   const rb = values.length ? Math.min(...values) : 0;
-  const criticalFailure = values.length > 0 && values.every(v => v === 1);
-  const counts = new Map();
-  for (const value of values) counts.set(value, (counts.get(value) || 0) + 1);
-  const criticalSuccess = !criticalFailure && [...counts.entries()].some(([value,count]) => value >= 6 && count >= 2);
-  const numericDt = Number(dt);
-  const hasDt = Number.isFinite(numericDt) && numericDt > 0;
-  const success = criticalSuccess ? true : criticalFailure ? false : hasDt ? total >= numericDt : null;
+  const classification = classifyOp2Result(values,total,dt);
   return {
     label,
     dice: results,
     selectedIndexes,
+    diceTotal,
+    bonus: numericBonus,
     total,
     ra,
     rb,
-    dt: hasDt ? numericDt : null,
-    success,
-    criticalSuccess,
-    criticalFailure,
+    dt: classification.dt,
+    success: classification.success,
+    criticalSuccess: classification.criticalSuccess,
+    criticalFailure: classification.criticalFailure,
     createdAt: Date.now()
   };
 }

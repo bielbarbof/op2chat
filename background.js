@@ -1,127 +1,30 @@
 import OBR,{buildText} from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHARACTERS} from './characters.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,CHUNK_KEY,MAX_MESSAGE_LENGTH,mergeEntries,chunkEntries,makeId,bytes} from './chat-core.js';
+import {classifyOp2Result} from './roll.js';
 
 let role='PLAYER',playerId='',connectionId='',roomId='',cachedHistory=[],writeQueue=Promise.resolve();
-
-async function resolveSender(event){
-  if(event.connectionId===connectionId){return{ id:playerId, role, name:await OBR.player.getName(), color:await OBR.player.getColor() }}
-  const party=await OBR.party.getPlayers();const p=party.find(x=>x.connectionId===event.connectionId);return p?{id:p.id,role:p.role,name:p.name,color:p.color}:null;
-}
-
-async function assignedCharacter(senderId){
-  const meta=await OBR.room.getMetadata();const roomState=meta[ROOM_STATE_KEY];
-  if(!roomState?.assignments)return null;
-  const id=Object.keys(CHARACTERS).find(cid=>roomState.assignments[cid]?.playerId===senderId);
-  return id?CHARACTERS[id]:null;
-}
-
+async function resolveSender(event){if(event.connectionId===connectionId){return{ id:playerId, role, name:await OBR.player.getName(), color:await OBR.player.getColor() }}const party=await OBR.party.getPlayers();const p=party.find(x=>x.connectionId===event.connectionId);return p?{id:p.id,role:p.role,name:p.name,color:p.color}:null}
+async function assignedCharacter(senderId){const meta=await OBR.room.getMetadata();const roomState=meta[ROOM_STATE_KEY];if(!roomState?.assignments)return null;const id=Object.keys(CHARACTERS).find(cid=>roomState.assignments[cid]?.playerId===senderId);return id?CHARACTERS[id]:null}
 const ALLOWED_DICE=new Set([4,6,8,10,12,20]);
 const clampNumber=(value,min,max,fallback=0)=>{const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback};
-function sanitizeSimpleRoll(raw={}){
-  const sides=ALLOWED_DICE.has(Number(raw.sides))?Number(raw.sides):20;
-  const values=Array.isArray(raw.values)?raw.values.slice(0,12).map(v=>Math.trunc(clampNumber(v,1,sides,1))):[];
-  const bonus=Math.trunc(clampNumber(raw.bonus,-999,999,0));
-  return {label:String(raw.label||'Rolagem livre').slice(0,80),sides,count:values.length||Math.trunc(clampNumber(raw.count,1,12,1)),bonus,values,total:Math.trunc(clampNumber(raw.total,-9999,9999,values.reduce((a,b)=>a+b,0)+bonus)),createdAt:Number(raw.createdAt||Date.now())};
-}
+function sanitizeSimpleRoll(raw={}){const sides=ALLOWED_DICE.has(Number(raw.sides))?Number(raw.sides):20;const values=Array.isArray(raw.values)?raw.values.slice(0,12).map(v=>Math.trunc(clampNumber(v,1,sides,1))):[];const bonus=Math.trunc(clampNumber(raw.bonus,-999,999,0));return {label:String(raw.label||'Rolagem livre').slice(0,80),sides,count:values.length||Math.trunc(clampNumber(raw.count,1,12,1)),bonus,values,total:Math.trunc(clampNumber(raw.total,-9999,9999,values.reduce((a,b)=>a+b,0)+bonus)),createdAt:Number(raw.createdAt||Date.now())}}
 function sanitizeTestResult(raw={}){
-  const dice=Array.isArray(raw.dice)?raw.dice.slice(0,4).map(d=>{const sides=ALLOWED_DICE.has(Number(d?.sides))?Number(d.sides):4;return {index:Math.trunc(clampNumber(d?.index,0,3,0)),sides,source:String(d?.source||`d${sides}`).slice(0,72),kind:String(d?.kind||'extra').slice(0,24),value:Math.trunc(clampNumber(d?.value,1,sides,1))}}):[];
-  const selectedIndexes=Array.isArray(raw.selectedIndexes)?raw.selectedIndexes.filter(i=>Number.isInteger(i)&&i>=0&&i<dice.length).slice(0,3):[];
-  return {label:String(raw.label||'Teste').slice(0,110),dice,selectedIndexes,total:Math.trunc(clampNumber(raw.total,-9999,9999,0)),success:raw.success===true?true:raw.success===false?false:null,criticalSuccess:Boolean(raw.criticalSuccess),criticalFailure:Boolean(raw.criticalFailure),createdAt:Number(raw.createdAt||Date.now())};
+  const dice=Array.isArray(raw.dice)?raw.dice.slice(0,4).map((d,index)=>{const sides=ALLOWED_DICE.has(Number(d?.sides))?Number(d.sides):4;return {index,sides,source:String(d?.source||`d${sides}`).slice(0,72),kind:String(d?.kind||'extra').slice(0,24),value:Math.trunc(clampNumber(d?.value,1,sides,1))}}):[];
+  const maxSum=Math.min(3,dice.length);let selectedIndexes=Array.isArray(raw.selectedIndexes)?raw.selectedIndexes.filter(i=>Number.isInteger(i)&&i>=0&&i<dice.length).slice(0,maxSum):[];
+  if(selectedIndexes.length!==maxSum)selectedIndexes=[...dice].sort((a,b)=>b.value-a.value||a.index-b.index).slice(0,maxSum).map(d=>d.index).sort((a,b)=>a-b);
+  const bonus=Math.trunc(clampNumber(raw.bonus,-999,999,0));const diceTotal=dice.filter(d=>selectedIndexes.includes(d.index)).reduce((sum,d)=>sum+d.value,0);const total=diceTotal+bonus;const values=dice.map(d=>d.value);
+  const classification=classifyOp2Result(values,total,raw.dt);
+  return {label:String(raw.label||'Teste').slice(0,110),dice,selectedIndexes,diceTotal,bonus,total,dt:classification.dt,success:classification.success,criticalSuccess:classification.criticalSuccess,criticalFailure:classification.criticalFailure,createdAt:Number(raw.createdAt||Date.now())};
 }
-
-function cleanEntry(raw,sender,character){
-  const type=raw?.type==='test'||raw?.type==='simple-roll'?'roll':'message';
-  const base={id:String(raw?.id||makeId()),createdAt:Number(raw?.createdAt||Date.now()),authorId:sender.id,
-    authorName:character?.name || (sender.role==='GM'?'Mestre':sender.name||'Jogador'),
-    characterId:character?.id||null,accent:character?.accent||(sender.role==='GM'?'#7757c8':sender.color||'#c8c1b5')};
-  if(type==='message') return {...base,type:'message',text:String(raw?.text||'').slice(0,MAX_MESSAGE_LENGTH)};
-  if(raw?.type==='simple-roll') return {...base,type:'simple-roll',roll:sanitizeSimpleRoll(raw.roll||{})};
-  return {...base,type:'test',result:sanitizeTestResult(raw?.result||{})};
-}
-
+function cleanEntry(raw,sender,character){const type=raw?.type==='test'||raw?.type==='simple-roll'?'roll':'message';const base={id:String(raw?.id||makeId()),createdAt:Number(raw?.createdAt||Date.now()),authorId:sender.id,authorName:character?.name||(sender.role==='GM'?'Mestre':sender.name||'Jogador'),characterId:character?.id||null,accent:character?.accent||(sender.role==='GM'?'#7757c8':sender.color||'#c8c1b5')};if(type==='message')return{...base,type:'message',text:String(raw?.text||'').slice(0,MAX_MESSAGE_LENGTH)};if(raw?.type==='simple-roll')return{...base,type:'simple-roll',roll:sanitizeSimpleRoll(raw.roll||{})};return{...base,type:'test',result:sanitizeTestResult(raw?.result||{})}}
 async function sceneReady(){try{return await OBR.scene.isReady()}catch{return false}}
-
-async function loadSceneHistory(){
-  if(!(await sceneReady()))return[];
-  const items=await OBR.scene.items.getItems(i=>Boolean(i.metadata?.[CHUNK_KEY]?.roomId===roomId));
-  return items.sort((a,b)=>(a.metadata[CHUNK_KEY].index||0)-(b.metadata[CHUNK_KEY].index||0)).flatMap(i=>Array.isArray(i.metadata[CHUNK_KEY].entries)?i.metadata[CHUNK_KEY].entries:[]);
-}
-
-async function writeSceneHistory(entries){
-  if(!(await sceneReady()))return;
-  const chunks=chunkEntries(entries,8500);
-  const existing=await OBR.scene.items.getItems(i=>Boolean(i.metadata?.[CHUNK_KEY]?.roomId===roomId));
-  existing.sort((a,b)=>(a.metadata[CHUNK_KEY].index||0)-(b.metadata[CHUNK_KEY].index||0));
-  const shared=Math.min(existing.length,chunks.length);
-  for(let i=0;i<shared;i++){
-    const id=existing[i].id;const data={v:1,roomId,index:i,entries:chunks[i],updatedAt:Date.now()};
-    await OBR.scene.items.updateItems([id],items=>{for(const item of items){item.metadata=item.metadata||{};item.metadata[CHUNK_KEY]=data;item.visible=false;item.locked=true;item.disableHit=true;item.name=`OP2 Chat // Dados ${i+1}`;}});
-  }
-  for(let i=shared;i<chunks.length;i++){
-    const data={v:1,roomId,index:i,entries:chunks[i],updatedAt:Date.now()};
-    const item=buildText().plainText('OP2 CHAT DATA').position({x:0,y:0}).layer('TEXT').visible(false).locked(true).disableHit(true).metadata({[CHUNK_KEY]:data}).name(`OP2 Chat // Dados ${i+1}`).build();
-    await OBR.scene.items.addItems([item]);
-  }
-  if(existing.length>chunks.length)await OBR.scene.items.deleteItems(existing.slice(chunks.length).map(i=>i.id));
-}
-
-async function updateRecent(entries){
-  let recent=entries.slice(-8);
-  while(recent.length&&bytes(recent)>6500)recent=recent.slice(1);
-  await OBR.room.setMetadata({[RECENT_KEY]:{v:1,entries:recent,updatedAt:Date.now()}});
-}
-
-function persist(entries){
-  cachedHistory=entries;
-  writeQueue=writeQueue.then(async()=>{await writeSceneHistory(entries);await updateRecent(entries)}).catch(console.error);
-  return writeQueue;
-}
-
-async function loadInitial(){
-  const meta=await OBR.room.getMetadata();const recent=Array.isArray(meta[RECENT_KEY]?.entries)?meta[RECENT_KEY].entries:[];
-  const scene=await loadSceneHistory();cachedHistory=mergeEntries(recent,scene);
-  if(scene.length===0&&cachedHistory.length)await writeSceneHistory(cachedHistory);
-}
-
-async function sendHistory(targetConnectionId,requestId){
-  const parts=chunkEntries(cachedHistory,8500);const total=Math.max(1,parts.length);
-  if(!parts.length)parts.push([]);
-  for(let i=0;i<parts.length;i++)await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-part',targetConnectionId,requestId,index:i,total,entries:parts[i]},{destination:'ALL'});
-}
-
-async function handle(event){
-  if(role!=='GM')return;const d=event.data||{};
-  if(d.type==='request-history'){await sendHistory(event.connectionId,d.requestId||makeId());return}
-  const sender=await resolveSender(event);if(!sender)return;
-  if(d.type==='submit'&&d.entry){
-    const character=await assignedCharacter(sender.id);const entry=cleanEntry(d.entry,sender,character);
-    if(entry.type==='message'&&!entry.text.trim())return;
-    cachedHistory=mergeEntries(cachedHistory,[entry]);await persist(cachedHistory);
-    await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'persisted-entry',entry},{destination:'ALL'});return;
-  }
-  if(d.type==='clear-history'){
-    if(sender.role!=='GM')return;
-    cachedHistory=[];await persist([]);
-    await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-cleared'},{destination:'ALL'});return;
-  }
-  if(d.type==='delete'&&d.entryId){
-    const entry=cachedHistory.find(e=>e.id===d.entryId);if(!entry)return;
-    if(sender.role!=='GM'&&entry.authorId!==sender.id)return;
-    cachedHistory=cachedHistory.filter(e=>e.id!==d.entryId);await persist(cachedHistory);
-    await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'deleted',entryId:d.entryId},{destination:'ALL'});return;
-  }
-}
-
-async function setup(){
-  if(!OBR.isAvailable)return;await new Promise(r=>OBR.onReady(r));
-  [role,connectionId]=await Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]);playerId=OBR.player.id;roomId=OBR.room.id;
-  if(role==='GM')await loadInitial();
-  OBR.broadcast.onMessage(CHAT_CHANNEL,handle);
-  OBR.scene.onReadyChange(async ready=>{
-    if(role!=='GM'||!ready)return;
-    const scene=await loadSceneHistory();const merged=mergeEntries(cachedHistory,scene);cachedHistory=merged;
-    if(merged.length)await persist(merged);
-  });
-}
+async function loadSceneHistory(){if(!(await sceneReady()))return[];const items=await OBR.scene.items.getItems(i=>Boolean(i.metadata?.[CHUNK_KEY]?.roomId===roomId));return items.sort((a,b)=>(a.metadata[CHUNK_KEY].index||0)-(b.metadata[CHUNK_KEY].index||0)).flatMap(i=>Array.isArray(i.metadata[CHUNK_KEY].entries)?i.metadata[CHUNK_KEY].entries:[])}
+async function writeSceneHistory(entries){if(!(await sceneReady()))return;const chunks=chunkEntries(entries,8500);const existing=await OBR.scene.items.getItems(i=>Boolean(i.metadata?.[CHUNK_KEY]?.roomId===roomId));existing.sort((a,b)=>(a.metadata[CHUNK_KEY].index||0)-(b.metadata[CHUNK_KEY].index||0));const shared=Math.min(existing.length,chunks.length);for(let i=0;i<shared;i++){const id=existing[i].id;const data={v:1,roomId,index:i,entries:chunks[i],updatedAt:Date.now()};await OBR.scene.items.updateItems([id],items=>{for(const item of items){item.metadata=item.metadata||{};item.metadata[CHUNK_KEY]=data;item.visible=false;item.locked=true;item.disableHit=true;item.name=`OP2 Chat // Dados ${i+1}`;}})}for(let i=shared;i<chunks.length;i++){const data={v:1,roomId,index:i,entries:chunks[i],updatedAt:Date.now()};const item=buildText().plainText('OP2 CHAT DATA').position({x:0,y:0}).layer('TEXT').visible(false).locked(true).disableHit(true).metadata({[CHUNK_KEY]:data}).name(`OP2 Chat // Dados ${i+1}`).build();await OBR.scene.items.addItems([item])}if(existing.length>chunks.length)await OBR.scene.items.deleteItems(existing.slice(chunks.length).map(i=>i.id))}
+async function updateRecent(entries){let recent=entries.slice(-8);while(recent.length&&bytes(recent)>6500)recent=recent.slice(1);await OBR.room.setMetadata({[RECENT_KEY]:{v:1,entries:recent,updatedAt:Date.now()}})}
+function persist(entries){cachedHistory=entries;writeQueue=writeQueue.then(async()=>{await writeSceneHistory(entries);await updateRecent(entries)}).catch(console.error);return writeQueue}
+async function loadInitial(){const meta=await OBR.room.getMetadata();const recent=Array.isArray(meta[RECENT_KEY]?.entries)?meta[RECENT_KEY].entries:[];const scene=await loadSceneHistory();cachedHistory=mergeEntries(recent,scene);if(scene.length===0&&cachedHistory.length)await writeSceneHistory(cachedHistory)}
+async function sendHistory(targetConnectionId,requestId){const parts=chunkEntries(cachedHistory,8500);const total=Math.max(1,parts.length);if(!parts.length)parts.push([]);for(let i=0;i<parts.length;i++)await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-part',targetConnectionId,requestId,index:i,total,entries:parts[i]},{destination:'ALL'})}
+async function handle(event){if(role!=='GM')return;const d=event.data||{};if(d.type==='request-history'){await sendHistory(event.connectionId,d.requestId||makeId());return}const sender=await resolveSender(event);if(!sender)return;if(d.type==='submit'&&d.entry){const character=await assignedCharacter(sender.id);const entry=cleanEntry(d.entry,sender,character);if(entry.type==='message'&&!entry.text.trim())return;cachedHistory=mergeEntries(cachedHistory,[entry]);await persist(cachedHistory);await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'persisted-entry',entry},{destination:'ALL'});return}if(d.type==='clear-history'){if(sender.role!=='GM')return;cachedHistory=[];await persist([]);await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-cleared'},{destination:'ALL'});return}if(d.type==='delete'&&d.entryId){const entry=cachedHistory.find(e=>e.id===d.entryId);if(!entry)return;if(sender.role!=='GM'&&entry.authorId!==sender.id)return;cachedHistory=cachedHistory.filter(e=>e.id!==d.entryId);await persist(cachedHistory);await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'deleted',entryId:d.entryId},{destination:'ALL'});return}}
+async function setup(){if(!OBR.isAvailable)return;await new Promise(r=>OBR.onReady(r));[role,connectionId]=await Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]);playerId=OBR.player.id;roomId=OBR.room.id;if(role==='GM')await loadInitial();OBR.broadcast.onMessage(CHAT_CHANNEL,handle);OBR.scene.onReadyChange(async ready=>{if(role!=='GM'||!ready)return;const scene=await loadSceneHistory();const merged=mergeEntries(cachedHistory,scene);cachedHistory=merged;if(merged.length)await persist(merged)})}
 setup().catch(console.error);
