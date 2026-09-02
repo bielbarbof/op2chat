@@ -131,6 +131,44 @@ async function setup(){
   $('#dtInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitDt();e.currentTarget.blur()}if(e.key==='Escape'){e.currentTarget.value=state.roomState.testDt??'';e.currentTarget.blur()}});
   $('#dtInput').addEventListener('blur',commitDt);$('#clearDt').addEventListener('click',()=>{setRoomDt(null);$('#dtInput').value=''});
   if(!OBR.isAvailable){$('#loading').classList.add('hidden');state.role='GM';setTheme();return}
-  await new Promise(r=>OBR.onReady(r));[state.role,state.connectionId]=await Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]);state.playerId=OBR.player.id;const meta=await OBR.room.getMetadata();state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);if(Array.isArray(meta[RECENT_KEY]?.entries))mergeAndRender(meta[RECENT_KEY].entries);setTheme();if(IS_PANEL){await syncChatPanelSize();let lastW=0,lastH=0;const resync=async()=>{const w=window.innerWidth,h=window.innerHeight;if(w===lastW&&h===lastH)return;lastW=w;lastH=h;await syncChatPanelSize()};window.addEventListener('resize',resync,{passive:true});setInterval(()=>syncChatPanelSize(),1500)}OBR.broadcast.onMessage(CHAT_CHANNEL,onChatEvent);OBR.broadcast.onMessage(SYNC_CHANNEL,onSharedSync);OBR.room.onMetadataChange(meta=>{if(meta[ROOM_STATE_KEY]){state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);setTheme()}if(Array.isArray(meta[RECENT_KEY]?.entries)){if(meta[RECENT_KEY].entries.length===0&&state.entries.length){state.entries=[];renderFeed()}else mergeAndRender(meta[RECENT_KEY].entries)}});await requestHistory();$('#loading').classList.add('hidden')
+
+  await new Promise(r=>OBR.onReady(r));
+  const [nextRole,nextConnectionId,meta]=await Promise.all([
+    OBR.player.getRole(),
+    OBR.player.getConnectionId(),
+    OBR.room.getMetadata(),
+  ]);
+  state.role=nextRole;
+  state.connectionId=nextConnectionId;
+  state.playerId=OBR.player.id;
+  state.roomState=normalizeRuntimeState(meta[ROOM_STATE_KEY]);
+  if(Array.isArray(meta[RECENT_KEY]?.entries))mergeAndRender(meta[RECENT_KEY].entries);
+  setTheme();
+
+  OBR.broadcast.onMessage(CHAT_CHANNEL,onChatEvent);
+  OBR.broadcast.onMessage(SYNC_CHANNEL,onSharedSync);
+  OBR.room.onMetadataChange(nextMeta=>{
+    if(nextMeta[ROOM_STATE_KEY]){state.roomState=normalizeRuntimeState(nextMeta[ROOM_STATE_KEY]);setTheme()}
+    if(Array.isArray(nextMeta[RECENT_KEY]?.entries)){
+      if(nextMeta[RECENT_KEY].entries.length===0&&state.entries.length){state.entries=[];renderFeed()}
+      else mergeAndRender(nextMeta[RECENT_KEY].entries)
+    }
+  });
+
+  // The recent room snapshot is enough to make the panel useful immediately.
+  // Full scene history and exact host geometry continue asynchronously.
+  $('#loading').classList.add('hidden');
+  void requestHistory();
+
+  if(IS_PANEL){
+    let resizeTimer=null;
+    const resync=()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(()=>{void syncChatPanelSize()},120);
+    };
+    window.addEventListener('resize',resync,{passive:true});
+    requestAnimationFrame(()=>{void syncChatPanelSize()});
+    setTimeout(()=>{void syncChatPanelSize()},5000);
+  }
 }
 setup().catch(e=>{console.error(e);$('#loading').textContent=`ERRO · ${e.message||e}`});

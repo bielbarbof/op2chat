@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.4
+
+- Remove a reconstrução do histórico completo do caminho crítico de abertura do painel lateral.
+- Registra a ação do Chat antes da hidratação de identidade e dos itens de histórico da cena.
+- Usa geometria previamente aquecida e elimina a consulta de estado do popover no primeiro clique.
+- Exibe o snapshot recente da sala imediatamente e sincroniza o histórico completo em segundo plano.
+- Remove redimensionamento bloqueante da inicialização do painel e reduz consultas periódicas desnecessárias ao viewport.
+- Mantém persistência, DT, rolagens, permissões e integração com Fichas sem alterar o formato dos dados.
+
 ## 0.7.3
 
 - Substitui o Action Popover de Chat por um painel lateral persistente aberto através da API oficial de Popover do Owlbear Rodeo.
