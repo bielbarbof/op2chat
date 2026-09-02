@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+- Release de compatibilidade com Fichas v0.7.2; regras, DT, pool multidados, histórico e layout do Chat permanecem inalterados.
+
 ## 0.7.1
 
 - Remove o selo comunitário do cabeçalho do Chat e aproveita o espaço liberado.
