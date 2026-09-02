@@ -44,7 +44,7 @@ export function normalizeRuntimeState(raw) {
     target.pendingDice = Array.isArray(incoming.pendingDice)
       ? incoming.pendingDice.slice(-4).map(normalizePendingDie)
       : [];
-    // Recovery: remove accidental duplicate one-shot effects from older builds.
+    // Deduplicate persisted one-shot effects created by earlier 0.6.x states.
     const unique = [];
     const seenOneShot = new Set();
     for (const die of target.pendingDice) {

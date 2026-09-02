@@ -1,8 +1,13 @@
-# CHANGELOG — OP2 Playtest Chat
+# Changelog
 
-## 0.6.3 — Definitiva
+## 0.6.4
 
-- Refinamento visual final sobre a v0.6.2 Corrigida.
-- Webfonts Girassol + Arpona permanecem embutidas e independentes do dispositivo.
-- Divisores de seção suavizados.
-- Ajustes finais solicitados pelo usuário aplicados sem alterar a persistência da linha 0.6.x.
+- Equalização óptica dos dados d4, d6, d8, d10, d12 e d20 no rolador e nos cards.
+- Controles intermediários ajustados para Arpona Medium, preservando os cards de rolagem aprovados.
+- Avisos de licença e documentação pública revisados.
+- Limpeza de arquivos internos e assets não utilizados.
+- Persistência, histórico e chaves de sincronização da v0.6.3 preservados.
+
+## 0.6.3
+
+- Base estável utilizada para esta release.

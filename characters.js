@@ -25,7 +25,7 @@ const s = (die, attribute, specialization = "") => ({ die, attribute, specializa
 export const CHARACTERS = {
   alan: {
     id: "alan", name: "Alan", profile: "Executor", occupation: "Cientista", level: 2,
-    accent: "#d13b22", portrait: "./assets/portraits/alan.jpg", maxPV: 10, maxPD: 16,
+    accent: "#d13b22", maxPV: 10, maxPD: 16,
     attributes: { fisico: 6, mente: 8, emocao: 8 },
     skills: {
       acrobacia:s(4,"fisico"), aptidao:s(6,"mente","Humanas"), atletismo:s(4,"fisico"), crime:s(6,"fisico"),
@@ -41,7 +41,7 @@ export const CHARACTERS = {
   },
   edgar: {
     id: "edgar", name: "Edgar", profile: "Executor", occupation: "Operário", level: 2,
-    accent: "#d13b22", portrait: "./assets/portraits/edgar.jpg", maxPV: 18, maxPD: 10,
+    accent: "#d13b22", maxPV: 18, maxPD: 10,
     attributes: { fisico: 10, mente: 6, emocao: 6 },
     skills: {
       acrobacia:s(4,"fisico"), aptidao:s(4,"mente"), atletismo:s(8,"fisico"), crime:s(6,"fisico"),
@@ -57,7 +57,7 @@ export const CHARACTERS = {
   },
   eloisa: {
     id: "eloisa", name: "Eloísa", profile: "Analista", occupation: "Artista", level: 2,
-    accent: "#4a84cf", portrait: "./assets/portraits/eloisa.jpg", maxPV: 12, maxPD: 14,
+    accent: "#4a84cf", maxPV: 12, maxPD: 14,
     attributes: { fisico: 8, mente: 8, emocao: 6 },
     skills: {
       acrobacia:s(6,"fisico"), aptidao:s(4,"mente"), atletismo:s(4,"fisico"), crime:s(6,"fisico"),
@@ -73,7 +73,7 @@ export const CHARACTERS = {
   },
   kenia: {
     id: "kenia", name: "Kênia", profile: "Analista", occupation: "Profissional de Escritório", level: 2,
-    accent: "#4a84cf", portrait: "./assets/portraits/kenia.jpg", maxPV: 12, maxPD: 12,
+    accent: "#4a84cf", maxPV: 12, maxPD: 12,
     attributes: { fisico: 6, mente: 10, emocao: 6 },
     skills: {
       acrobacia:s(6,"fisico"), aptidao:s(6,"mente","Atualidades"), atletismo:s(6,"fisico"), crime:s(4,"fisico"),
@@ -89,7 +89,7 @@ export const CHARACTERS = {
   },
   victor: {
     id: "victor", name: "Victor", profile: "Vigilante", occupation: "Professor", level: 2,
-    accent: "#5f9e3e", portrait: "./assets/portraits/victor.jpg", maxPV: 14, maxPD: 14,
+    accent: "#5f9e3e", maxPV: 14, maxPD: 14,
     attributes: { fisico: 8, mente: 6, emocao: 8 },
     skills: {
       acrobacia:s(4,"fisico"), aptidao:s(6,"mente","Humanas"), atletismo:s(6,"fisico"), crime:s(4,"fisico"),
