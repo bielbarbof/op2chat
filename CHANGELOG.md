@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.6
+
+- Corrige o manifesto do Chat para respeitar o limite oficial de 128 caracteres na descrição, que fazia o Owlbear rejeitar a extensão antes de carregar qualquer iframe.
+- Preserva integralmente a otimização de abertura da v0.7.5 e o painel lateral persistente.
+- Não altera histórico, DT, rolagens, permissões, persistência ou sincronização com Fichas.
+
 ## 0.7.5
 
 - Corrige a falha de carregamento introduzida na v0.7.4 ao restaurar o Action launcher mínimo e sem uma segunda inicialização do SDK.
