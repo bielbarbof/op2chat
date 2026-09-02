@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+- Remove o selo comunitário do cabeçalho do Chat e aproveita o espaço liberado.
+- Centraliza verticalmente perfil, lixeira, DT e botão de Ficha/Personagens em relação ao título CHAT.
+- Atualiza os ribbons de perfil, incluindo Mestre, para a mesma família visual usada nas Fichas.
+
 ## 0.7.0
 
 - DT atual da mesa adicionada ao cabeçalho do Mestre e sincronizada com a extensão de Fichas.

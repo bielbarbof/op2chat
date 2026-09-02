@@ -1,6 +1,6 @@
 {
   "name": "OP2 Playtest Chat",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "manifest_version": 1,
   "description": "Chat comunitário não oficial do Playtest Alpha com rolagens e histórico persistente no Owlbear Rodeo.",
   "author": "Ferramenta comunitária não oficial",
