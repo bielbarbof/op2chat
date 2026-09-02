@@ -1,4 +1,4 @@
-# OP2 Playtest Chat — v0.7.4
+# OP2 Playtest Chat — v0.7.5
 
 Este é um conteúdo não oficial, publicado sob a Licença da Comunidade de Ordem Paranormal.
 

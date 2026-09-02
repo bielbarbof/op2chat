@@ -31,11 +31,6 @@ async function measureGeometry(){
   return cachedGeometry;
 }
 
-export function warmChatPanelGeometry(){
-  if(!OBR.isAvailable)return Promise.resolve(cachedGeometry);
-  return measureGeometry().catch(()=>cachedGeometry);
-}
-
 export async function isChatPanelOpen(){
   if(!OBR.isAvailable)return false;
   try{

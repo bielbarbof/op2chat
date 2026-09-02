@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.5
+
+- Corrige a falha de carregamento introduzida na v0.7.4 ao restaurar o Action launcher mínimo e sem uma segunda inicialização do SDK.
+- Mantém o listener da ação registrado antes da hidratação do histórico, preservando a abertura rápida do painel lateral.
+- Remove o aquecimento de viewport do bootstrap e deixa o ajuste fino de dimensões ocorrer de forma assíncrona após o painel aparecer.
+- Torna falhas na reconstrução do histórico completo não bloqueantes para a interface e mantém o snapshot recente da sala disponível.
+- Não altera formato de persistência, DT, rolagens, permissões ou sincronização com Fichas.
+
 ## 0.7.4
 
 - Remove a reconstrução do histórico completo do caminho crítico de abertura do painel lateral.
