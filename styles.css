@@ -356,11 +356,13 @@ button {
   filter: drop-shadow(0 0 1px rgba(0,0,0,.4));
 }
 .tray-controls {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) 108px;
+  display: flex;
   gap: 8px;
   margin-top: 9px;
 }
+.tray-controls .bonus-field { flex: 1 1 auto; min-width: 0; }
+.tray-controls .send-message { flex: 0 0 94px; }
+.tray-controls .primary { flex: 0 0 108px; }
 .bonus-field {
   border: 1px solid #3d3934;
   display: grid;
@@ -400,6 +402,30 @@ button {
   background: #fff;
   outline: 1px solid var(--accent);
   outline-offset: 1px;
+}
+.send-message {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-roll);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .12s ease,border-color .12s ease,color .12s ease,opacity .12s ease;
+}
+.send-message:hover:not(:disabled),.send-message:focus-visible:not(:disabled) {
+  filter: brightness(1.1);
+  outline: 1px solid #fff;
+  outline-offset: 1px;
+}
+.send-message:disabled {
+  border-color: #4a4742;
+  background: #807c77;
+  color: #171717;
+  opacity: .42;
+  cursor: not-allowed;
 }
 .loading {
   position: absolute;
@@ -481,7 +507,7 @@ button {
   font-family: var(--font-roll);
   font-weight: 600;
 }
-.primary,.die-btn {
+.primary,.send-message,.die-btn {
   font-family: var(--font-roll);
   font-weight: 500;
 }
@@ -489,7 +515,6 @@ button {
   letter-spacing: .01em;
 }
 
-/* v0.7.0: profile identity, shared DT and cumulative dice pool. */
 .header-actions { gap: 8px; }
 .profile-ribbon {
   --profile-accent: var(--accent);
@@ -548,7 +573,9 @@ button {
 }
 @media (max-width:410px) {
   .identity-pill { max-width: none; }
-  .tray-controls { grid-template-columns: minmax(0,1fr) 88px; }
+  .tray-controls { gap: 6px; }
+  .tray-controls .send-message { flex-basis: 80px; }
+  .tray-controls .primary { flex-basis: 88px; }
 }
 
 @media (max-width:460px) {
@@ -558,7 +585,6 @@ button {
   .open-sheet { margin-left: auto; }
 }
 
-/* v0.7.3: persistent left-side Chat surface. */
 html[data-surface="panel"],html[data-surface="panel"] body {
   background: transparent;
 }
@@ -604,4 +630,12 @@ html[data-surface="panel"] .chat-column {
 @media (max-width:460px) {
   html[data-surface="panel"] .header-actions { gap:6px; }
   html[data-surface="panel"] .panel-close { margin-left:0; }
+}
+
+@media (max-width:360px) {
+  .tray-controls { gap:5px; }
+  .tray-controls .send-message { flex-basis:74px; }
+  .tray-controls .primary { flex-basis:80px; }
+  .send-message,.primary { font-size:11px; }
+  .bonus-field { padding:0 6px; gap:3px; }
 }

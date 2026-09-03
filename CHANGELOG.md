@@ -1,65 +1,13 @@
 # Changelog
 
+## 0.7.7
+
+- Reduz o tempo percebido de abertura do Chat mantendo o painel lateral pré-carregado em segundo plano e hidratando o histórico completo após a interface estar disponível.
+- Adiciona o botão ENVIAR com estado independente do rolador e cor correspondente ao Mestre ou perfil atribuído.
+- Substitui o ícone do Chat pelo d6 fornecido ao projeto, preservando o número central em pixels opacos para manter a leitura na toolbar do Owlbear.
+- Substitui o aviso textual dos três maiores resultados por indicação visual dos dados efetivamente utilizados na soma.
+- Preserva DT, histórico, persistência, permissões, críticos e integração com Fichas.
+
 ## 0.7.6
 
-- Corrige o manifesto do Chat para respeitar o limite oficial de 128 caracteres na descrição, que fazia o Owlbear rejeitar a extensão antes de carregar qualquer iframe.
-- Preserva integralmente a otimização de abertura da v0.7.5 e o painel lateral persistente.
-- Não altera histórico, DT, rolagens, permissões, persistência ou sincronização com Fichas.
-
-## 0.7.5
-
-- Corrige a falha de carregamento introduzida na v0.7.4 ao restaurar o Action launcher mínimo e sem uma segunda inicialização do SDK.
-- Mantém o listener da ação registrado antes da hidratação do histórico, preservando a abertura rápida do painel lateral.
-- Remove o aquecimento de viewport do bootstrap e deixa o ajuste fino de dimensões ocorrer de forma assíncrona após o painel aparecer.
-- Torna falhas na reconstrução do histórico completo não bloqueantes para a interface e mantém o snapshot recente da sala disponível.
-- Não altera formato de persistência, DT, rolagens, permissões ou sincronização com Fichas.
-
-## 0.7.4
-
-- Remove a reconstrução do histórico completo do caminho crítico de abertura do painel lateral.
-- Registra a ação do Chat antes da hidratação de identidade e dos itens de histórico da cena.
-- Usa geometria previamente aquecida e elimina a consulta de estado do popover no primeiro clique.
-- Exibe o snapshot recente da sala imediatamente e sincroniza o histórico completo em segundo plano.
-- Remove redimensionamento bloqueante da inicialização do painel e reduz consultas periódicas desnecessárias ao viewport.
-- Mantém persistência, DT, rolagens, permissões e integração com Fichas sem alterar o formato dos dados.
-
-## 0.7.3
-
-- Substitui o Action Popover de Chat por um painel lateral persistente aberto através da API oficial de Popover do Owlbear Rodeo.
-- O clique na ação da extensão passa a alternar entre abrir e fechar o painel.
-- O painel usa altura disponível do viewport, permanece aberto ao interagir com a Room e adapta a largura para notebook, desktop e telas estreitas.
-- Adiciona fechamento direto no cabeçalho do Chat sem alterar histórico, DT, rolagens ou persistência.
-
-## 0.7.2
-
-- Release de compatibilidade com Fichas v0.7.2; regras, DT, pool multidados, histórico e layout do Chat permanecem inalterados.
-
-## 0.7.1
-
-- Remove o selo comunitário do cabeçalho do Chat e aproveita o espaço liberado.
-- Centraliza verticalmente perfil, lixeira, DT e botão de Ficha/Personagens em relação ao título CHAT.
-- Atualiza os ribbons de perfil, incluindo Mestre, para a mesma família visual usada nas Fichas.
-
-## 0.7.0
-
-- DT atual da mesa adicionada ao cabeçalho do Mestre e sincronizada com a extensão de Fichas.
-- Cards comuns só exibem sucesso ou falha quando existe DT definida; críticos continuam independentes da DT.
-- Sucesso crítico e falha crítica receberam estados de fundo verde-escuro e vermelho-escuro.
-- Rolador livre substituído por uma pool acumulativa de até quatro dados, com mistura e repetição de tipos.
-- Card de teste passou a compartilhar a mesma implementação visual utilizada pelas Fichas.
-- Cabeçalho passou a usar selo de perfil; o Mestre usa selo roxo e o botão de fichas passa a se chamar PERSONAGENS.
-- Integração com Ímpeto permite registrar automaticamente falhas inequívocas quando a Ficha está instalada.
-
-## 0.6.5
-
-- Arpona SemiBold incorporada e aplicada no lugar dos antigos usos de Arpona Bold.
-- Selo da Licença da Comunidade movido para o cabeçalho, à esquerda de CHAT.
-- Área útil do histórico ampliada e popover dimensionado dinamicamente conforme o viewport do Owlbear.
-
-## 0.6.4
-
-- Equalização óptica dos dados e revisão de tipografia, assets, documentação e persistência.
-
-## 0.6.3
-
-- Base estável utilizada pelas releases seguintes.
+- Corrige a validação do manifesto do Chat e consolida o painel lateral persistente como base estável.

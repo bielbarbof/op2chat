@@ -1,13 +1,13 @@
 {
   "name": "OP2 Playtest Chat",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "manifest_version": 1,
-  "description": "Chat comunitário não oficial do Playtest Alpha com painel lateral persistente, rolagens, histórico e abertura rápida.",
+  "description": "Chat comunitário não oficial do Playtest Alpha com painel lateral, rolagens, histórico persistente e integração com Fichas.",
   "author": "Ferramenta comunitária não oficial",
-  "icon": "/assets/ui/chat-icon-d4.png",
+  "icon": "/assets/ui/chat-icon-d6.png",
   "action": {
     "title": "OP2 Playtest Chat",
-    "icon": "/assets/ui/chat-icon-d4.png",
+    "icon": "/assets/ui/chat-icon-d6.png",
     "popover": "/launcher.html",
     "height": 48,
     "width": 64

@@ -3,10 +3,13 @@ import OBR from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 export const CHAT_PANEL_ID='com.op2.playtest.chat/side-panel';
 const PANEL_URL='/?surface=panel';
 const FALLBACK_GEOMETRY=Object.freeze({width:430,height:702,left:8,top:58});
+const HIDDEN_SIZE=1;
 
 let cachedGeometry={...FALLBACK_GEOMETRY};
-let assumedOpen=false;
-let toggleQueue=Promise.resolve();
+let mounted=false;
+let visible=false;
+let mountedTop=null;
+let panelQueue=Promise.resolve();
 
 export function getChatPanelGeometry(viewportWidth,viewportHeight){
   const vw=Math.max(320,Number(viewportWidth)||1280);
@@ -31,22 +34,13 @@ async function measureGeometry(){
   return cachedGeometry;
 }
 
-export async function isChatPanelOpen(){
-  if(!OBR.isAvailable)return false;
-  try{
-    const width=await OBR.popover.getWidth(CHAT_PANEL_ID);
-    return Number.isFinite(Number(width))&&Number(width)>0;
-  }catch{return false}
-}
-
-export async function openChatPanel(geometry=cachedGeometry){
-  if(!OBR.isAvailable)return;
+async function openRaw(width,height,geometry){
   const g=geometry||cachedGeometry;
   await OBR.popover.open({
     id:CHAT_PANEL_ID,
     url:PANEL_URL,
-    width:g.width,
-    height:g.height,
+    width,
+    height,
     anchorReference:'POSITION',
     anchorPosition:{left:g.left,top:g.top},
     anchorOrigin:{horizontal:'LEFT',vertical:'TOP'},
@@ -55,46 +49,127 @@ export async function openChatPanel(geometry=cachedGeometry){
     disableClickAway:true,
     marginThreshold:0,
   });
-  assumedOpen=true;
+  mounted=true;
+  mountedTop=g.top;
+}
+
+async function panelWidth(){
+  try{return Number(await OBR.popover.getWidth(CHAT_PANEL_ID))||0}catch{return 0}
+}
+
+async function ensureMountedHidden(){
+  if(!OBR.isAvailable||mounted)return;
+  try{
+    // Start loading the real Chat iframe as soon as the SDK is ready. Exact host
+    // geometry is not needed while the panel is only 1×1, so viewport reads stay
+    // off the prewarm critical path and update the cache opportunistically.
+    await openRaw(HIDDEN_SIZE,HIDDEN_SIZE,cachedGeometry);
+    visible=false;
+    void measureGeometry().catch(()=>{});
+  }catch{
+    mounted=false;
+  }
+}
+
+export function warmChatPanel(){
+  const task=panelQueue.then(ensureMountedHidden,ensureMountedHidden);
+  panelQueue=task.catch(()=>{});
+  return task;
+}
+
+async function resizeVisible(geometry){
+  await Promise.all([
+    OBR.popover.setWidth(CHAT_PANEL_ID,geometry.width),
+    OBR.popover.setHeight(CHAT_PANEL_ID,geometry.height),
+  ]);
+}
+
+async function showOnce(){
+  if(!OBR.isAvailable)return;
+  const initial=cachedGeometry;
+  if(!mounted){
+    try{
+      await openRaw(initial.width,initial.height,initial);
+      visible=true;
+    }catch{
+      mounted=false;
+      throw new Error('Não foi possível abrir o painel do Chat.');
+    }
+  }else{
+    try{
+      await resizeVisible(initial);
+      visible=true;
+    }catch{
+      mounted=false;
+      await openRaw(initial.width,initial.height,initial);
+      visible=true;
+    }
+  }
+
+  void measureGeometry().then(async geometry=>{
+    if(!visible)return;
+    try{
+      if(mountedTop!==geometry.top){
+        await OBR.popover.close(CHAT_PANEL_ID);
+        mounted=false;
+        await openRaw(geometry.width,geometry.height,geometry);
+        visible=true;
+      }else{
+        await resizeVisible(geometry);
+      }
+    }catch{}
+  }).catch(()=>{});
+}
+
+async function hideOnce(){
+  if(!OBR.isAvailable)return;
+  try{
+    await Promise.all([
+      OBR.popover.setWidth(CHAT_PANEL_ID,HIDDEN_SIZE),
+      OBR.popover.setHeight(CHAT_PANEL_ID,HIDDEN_SIZE),
+    ]);
+    mounted=true;
+  }catch{
+    mounted=false;
+  }
+  visible=false;
+}
+
+async function toggleOnce(){
+  if(visible){
+    const width=await panelWidth();
+    if(width>HIDDEN_SIZE+1){
+      await hideOnce();
+      return;
+    }
+    visible=false;
+  }
+  await showOnce();
+}
+
+export function toggleChatPanel(){
+  const task=panelQueue.then(toggleOnce,toggleOnce);
+  panelQueue=task.catch(()=>{});
+  return task;
 }
 
 export async function closeChatPanel(){
   if(!OBR.isAvailable)return;
-  try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
-  assumedOpen=false;
-}
-
-async function toggleOnce(){
-  if(!assumedOpen){
-    await openChatPanel();
-    void syncChatPanelSize();
-    return;
-  }
-  // Only probe the host when our local state says the panel should already be open.
-  // This keeps the first click on the fast path while recovering if the in-panel X
-  // closed the popover in a different iframe.
-  if(await isChatPanelOpen()){
-    await closeChatPanel();
-    return;
-  }
-  assumedOpen=false;
-  await openChatPanel();
-  void syncChatPanelSize();
-}
-
-export function toggleChatPanel(){
-  const task=toggleQueue.then(toggleOnce,toggleOnce);
-  toggleQueue=task.catch(()=>{});
-  return task;
+  try{
+    await Promise.all([
+      OBR.popover.setWidth(CHAT_PANEL_ID,HIDDEN_SIZE),
+      OBR.popover.setHeight(CHAT_PANEL_ID,HIDDEN_SIZE),
+    ]);
+  }catch{}
 }
 
 export async function syncChatPanelSize(){
   if(!OBR.isAvailable)return;
   try{
-    const g=await measureGeometry();
-    await Promise.all([
-      OBR.popover.setWidth(CHAT_PANEL_ID,g.width),
-      OBR.popover.setHeight(CHAT_PANEL_ID,g.height),
-    ]);
+    const width=await panelWidth();
+    if(width<=HIDDEN_SIZE+1)return;
+    const geometry=await measureGeometry();
+    if(mountedTop!==null&&mountedTop!==geometry.top)return;
+    await resizeVisible(geometry);
   }catch{}
 }

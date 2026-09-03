@@ -14,7 +14,7 @@ const SHEET_MODAL='com.op2.playtest.fichas/sheet';
 const DIE_SIDES=[4,6,8,10,12,20];
 const IS_PANEL=new URLSearchParams(location.search).get('surface')==='panel';
 document.documentElement.dataset.surface=IS_PANEL?'panel':'standalone';
-const state={role:'PLAYER',playerId:'preview',connectionId:'preview',roomState:defaultRuntimeState(),entries:[],historyParts:new Map(),pool:[],toastTimer:null,dtQueue:Promise.resolve(),pendingSharedMutations:new Map()};
+const state={role:'PLAYER',playerId:'preview',connectionId:'preview',roomState:defaultRuntimeState(),entries:[],historyParts:new Map(),pool:[],toastTimer:null,dtQueue:Promise.resolve(),pendingSharedMutations:new Map(),historyRequested:false};
 const dieImg=s=>`<img class="die-asset" src="./assets/dice/d${Number(s)}.png" alt="d${Number(s)}" />`;
 
 function assignedId(){return Object.keys(CHARACTERS).find(id=>state.roomState.assignments?.[id]?.playerId===state.playerId)||null}
@@ -50,7 +50,8 @@ function renderFeed(){const feed=$('#feed');if(!state.entries.length){feed.inner
 function mergeAndRender(entries){state.entries=mergeEntries(state.entries,entries);renderFeed()}
 function sendEntry(entry){mergeAndRender([entry]);if(OBR.isAvailable)OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'submit',entry},{destination:'ALL'}).catch(()=>toast('Não foi possível sincronizar a mensagem.'))}
 function deleteEntry(id){state.entries=state.entries.filter(e=>e.id!==id);renderFeed();if(OBR.isAvailable)OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'delete',entryId:id},{destination:'ALL'}).catch(()=>{})}
-function submitMessage(){const input=$('#message'),text=input.value.trim();if(!text)return;const command=text.match(/^\/r\s+(\d+)d(\d+)([+-]\d+)?$/i);if(command){const count=Math.max(1,Math.min(12,Number(command[1])||1)),sides=Number(command[2]),bonus=Number(command[3]||0);if(DIE_SIDES.includes(sides)){const roll=rollSimple({count,sides,bonus,label:'Rolagem livre'});sendEntry({id:makeId(),type:'simple-roll',createdAt:Date.now(),authorId:state.playerId,authorName:authorDisplay(),accent:getAccent(),roll});input.value='';return}}sendEntry({id:makeId(),type:'message',createdAt:Date.now(),authorId:state.playerId,authorName:authorDisplay(),accent:getAccent(),text:text.slice(0,MAX_MESSAGE_LENGTH)});input.value=''}
+function updateComposerState(){const input=$('#message'),button=$('#sendMessage');if(!input||!button)return;button.disabled=input.value.trim().length===0}
+function submitMessage({allowRollCommand=true}={}){const input=$('#message'),text=input.value.trim();if(!text){updateComposerState();return}const command=allowRollCommand?text.match(/^\/r\s+(\d+)d(\d+)([+-]\d+)?$/i):null;if(command){const count=Math.max(1,Math.min(12,Number(command[1])||1)),sides=Number(command[2]),bonus=Number(command[3]||0);if(DIE_SIDES.includes(sides)){const roll=rollSimple({count,sides,bonus,label:'Rolagem livre'});sendEntry({id:makeId(),type:'simple-roll',createdAt:Date.now(),authorId:state.playerId,authorName:authorDisplay(),accent:getAccent(),roll});input.value='';updateComposerState();return}}sendEntry({id:makeId(),type:'message',createdAt:Date.now(),authorId:state.playerId,authorName:authorDisplay(),accent:getAccent(),text:text.slice(0,MAX_MESSAGE_LENGTH)});input.value='';updateComposerState()}
 
 function poolCounts(){const counts=new Map(DIE_SIDES.map(s=>[s,0]));for(const s of state.pool)counts.set(s,(counts.get(s)||0)+1);return counts}
 function poolLabel(){const counts=poolCounts();const parts=DIE_SIDES.filter(s=>counts.get(s)>0).map(s=>`${counts.get(s)>1?counts.get(s):''}d${s}`);return parts.length?parts.join(' + '):'SELECIONE ATÉ 4 DADOS'}
@@ -121,11 +122,13 @@ async function openSheet(){
   }catch(e){console.error(e);toast('Não foi possível abrir a ficha.')}
 }
 async function clearHistory(){if(state.role!=='GM')return;const ok=confirm('Limpar todo o histórico do Chat? Mensagens e rolagens serão apagadas para todos os jogadores.');if(!ok)return;if(!OBR.isAvailable){state.entries=[];renderFeed();toast('Histórico limpo.');return}try{await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'clear-history'},{destination:'ALL'});}catch(e){console.error(e);toast('Não foi possível limpar o histórico.')}}
-async function requestHistory(){const requestId=makeId();state.historyParts.set(requestId,{parts:[],total:null});await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'request-history',requestId},{destination:'ALL'}).catch(()=>{})}
+async function requestHistory(){if(state.historyRequested)return;state.historyRequested=true;const requestId=makeId();state.historyParts.set(requestId,{parts:[],total:null});await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'request-history',requestId},{destination:'ALL'}).catch(()=>{state.historyRequested=false;state.historyParts.delete(requestId)})}
 function onChatEvent(event){const d=event.data||{};if(d.type==='persisted-entry'&&d.entry){mergeAndRender([d.entry]);return}if(d.type==='deleted'&&d.entryId){state.entries=state.entries.filter(e=>e.id!==d.entryId);renderFeed();return}if(d.type==='history-cleared'){state.entries=[];state.historyParts.clear();renderFeed();toast('Histórico limpo.');return}if(d.type==='history-part'&&d.targetConnectionId===state.connectionId){let bag=state.historyParts.get(d.requestId);if(!bag){bag={parts:[],total:d.total};state.historyParts.set(d.requestId,bag)}bag.total=d.total;bag.parts[d.index]=d.entries||[];if(bag.parts.filter(Boolean).length===bag.total){mergeAndRender(bag.parts.flat());state.historyParts.delete(d.requestId)}}}
 async function setup(){
-  renderDiceTray();renderFeed();
-  $('#message').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitMessage()}});
+  renderDiceTray();renderFeed();updateComposerState();
+  $('#message').addEventListener('input',updateComposerState);
+  $('#message').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitMessage({allowRollCommand:true})}});
+  $('#sendMessage').addEventListener('click',()=>submitMessage({allowRollCommand:false}));
   $('#freeRoll').addEventListener('click',freeRoll);$('#clearPool').addEventListener('click',()=>{state.pool=[];renderDiceTray()});
   $('#openSheet').addEventListener('click',openSheet);$('#clearHistory').addEventListener('click',clearHistory);$('#closePanel').addEventListener('click',()=>closeChatPanel());
   $('#dtInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitDt();e.currentTarget.blur()}if(e.key==='Escape'){e.currentTarget.value=state.roomState.testDt??'';e.currentTarget.blur()}});
@@ -155,20 +158,23 @@ async function setup(){
     }
   });
 
-  // The recent room snapshot is enough to make the panel useful immediately.
-  // Full scene history and exact host geometry continue asynchronously.
   $('#loading').classList.add('hidden');
-  void requestHistory();
 
   if(IS_PANEL){
     let resizeTimer=null;
+    const panelIsVisible=()=>window.innerWidth>4&&window.innerHeight>4;
     const resync=()=>{
       clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(()=>{void syncChatPanelSize()},120);
+      resizeTimer=setTimeout(()=>{
+        if(!panelIsVisible())return;
+        void requestHistory();
+        void syncChatPanelSize();
+      },80);
     };
     window.addEventListener('resize',resync,{passive:true});
-    requestAnimationFrame(()=>{void syncChatPanelSize()});
-    setTimeout(()=>{void syncChatPanelSize()},5000);
+    if(panelIsVisible())void requestHistory();
+  }else{
+    void requestHistory();
   }
 }
 setup().catch(e=>{console.error(e);$('#loading').textContent=`ERRO · ${e.message||e}`});

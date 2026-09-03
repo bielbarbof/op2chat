@@ -2,7 +2,7 @@ import OBR,{buildText} from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHARACTERS} from './characters.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,CHUNK_KEY,MAX_MESSAGE_LENGTH,mergeEntries,chunkEntries,makeId,bytes} from './chat-core.js';
 import {classifyOp2Result} from './roll.js';
-import {toggleChatPanel} from './panel.js';
+import {toggleChatPanel,warmChatPanel} from './panel.js';
 
 let role='PLAYER',playerId='',connectionId='',roomId='',cachedHistory=[],writeQueue=Promise.resolve();
 async function resolveSender(event){if(event.connectionId===connectionId){return{ id:playerId, role, name:await OBR.player.getName(), color:await OBR.player.getColor() }}const party=await OBR.party.getPlayers();const p=party.find(x=>x.connectionId===event.connectionId);return p?{id:p.id,role:p.role,name:p.name,color:p.color}:null}
@@ -39,21 +39,29 @@ async function hydrateInitialHistory(){
 }
 async function sendHistory(targetConnectionId,requestId){const parts=chunkEntries(cachedHistory,8500);const total=Math.max(1,parts.length);if(!parts.length)parts.push([]);for(let i=0;i<parts.length;i++)await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-part',targetConnectionId,requestId,index:i,total,entries:parts[i]},{destination:'ALL'})}
 let identityReady=Promise.resolve();
-let historyReady=Promise.resolve();
+let historyReady=null;
+function ensureHistoryReady(){
+  if(!historyReady){
+    historyReady=identityReady.then(()=>role==='GM'?hydrateInitialHistory():undefined).catch(error=>{
+      console.error('OP2 Chat: falha ao preparar histórico',error);
+    });
+  }
+  return historyReady;
+}
 
 async function handle(event){
   await identityReady;
   if(role!=='GM')return;
   const d=event.data||{};
   if(d.type==='request-history'){
-    await historyReady;
+    await ensureHistoryReady();
     await sendHistory(event.connectionId,d.requestId||makeId());
     return;
   }
   const sender=await resolveSender(event);
   if(!sender)return;
   if(d.type==='submit'&&d.entry){
-    await historyReady;
+    await ensureHistoryReady();
     const character=await assignedCharacter(sender.id);
     const entry=cleanEntry(d.entry,sender,character);
     if(entry.type==='message'&&!entry.text.trim())return;
@@ -64,14 +72,14 @@ async function handle(event){
   }
   if(d.type==='clear-history'){
     if(sender.role!=='GM')return;
-    await historyReady;
+    await ensureHistoryReady();
     cachedHistory=[];
     await persist([]);
     await OBR.broadcast.sendMessage(CHAT_CHANNEL,{type:'history-cleared'},{destination:'ALL'});
     return;
   }
   if(d.type==='delete'&&d.entryId){
-    await historyReady;
+    await ensureHistoryReady();
     const entry=cachedHistory.find(e=>e.id===d.entryId);
     if(!entry)return;
     if(sender.role!=='GM'&&entry.authorId!==sender.id)return;
@@ -82,7 +90,7 @@ async function handle(event){
 }
 
 async function refreshSceneHistory(){
-  await historyReady;
+  await ensureHistoryReady();
   if(role!=='GM')return;
   const scene=await loadSceneHistory();
   const merged=mergeEntries(cachedHistory,scene);
@@ -94,13 +102,12 @@ async function setup(){
   if(!OBR.isAvailable)return;
   await new Promise(r=>OBR.onReady(r));
 
-  // Register the Action fast path before player identity or scene history hydration.
-  // Opening the UI must never wait for a scene item scan.
   OBR.action.onOpenChange(open=>{
     if(!open)return;
     void OBR.action.close().catch(()=>{});
     void toggleChatPanel();
   });
+  void warmChatPanel();
 
   identityReady=Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]).then(([nextRole,nextConnectionId])=>{
     role=nextRole;
@@ -108,9 +115,16 @@ async function setup(){
     playerId=OBR.player.id;
     roomId=OBR.room.id;
   });
-  historyReady=identityReady.then(()=>role==='GM'?hydrateInitialHistory():undefined).catch(error=>{console.error('OP2 Chat: falha ao preparar histórico',error)});
 
   OBR.broadcast.onMessage(CHAT_CHANNEL,handle);
-  OBR.scene.onReadyChange(ready=>{if(ready)void refreshSceneHistory()});
+  let sceneTransitioned=false;
+  OBR.scene.onReadyChange(ready=>{
+    if(!ready){sceneTransitioned=true;return}
+    if(!sceneTransitioned)return;
+    sceneTransitioned=false;
+    historyReady=null;
+    cachedHistory=[];
+    void refreshSceneHistory();
+  });
 }
 setup().catch(()=>{});
