@@ -4,7 +4,7 @@ import {rollOp2Test,rollSimple} from './roll.js';
 import {renderResultCard} from './roll-card.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,MAX_MESSAGE_LENGTH,escapeHtml,makeId,mergeEntries,relativeTime} from './chat-core.js';
 import {normalizeRuntimeState,SYNC_CHANNEL} from './core-shared.js';
-import {PANEL_CONTROL_CHANNEL} from './panel.js';
+import {PANEL_CONTROL_CHANNEL} from './panel-constants.js';
 
 const $=s=>document.querySelector(s);
 const SHEETS_BASE_URL='https://op2fichas.onrender.com';

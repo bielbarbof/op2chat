@@ -1,6 +1,6 @@
 {
   "name": "OP2 Playtest Chat",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "manifest_version": 1,
   "description": "Chat comunitário não oficial do Playtest Alpha com painel lateral, rolagens, histórico persistente e integração com Fichas.",
   "author": "Ferramenta comunitária não oficial",

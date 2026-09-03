@@ -1,26 +1,15 @@
 # Changelog
 
-## 0.8.0
+## 0.8.1
 
-- Separa definitivamente as ações de fechar e maximizar: X e segundo clique na Action fecham o Chat; somente o controle dedicado alterna entre lateral e maximizado.
-- Mantém o botão de expandir/restaurar visível também no painel lateral reduzido.
-- Preserva o pré-carregamento do painel, histórico, sincronização e demais comportamentos aprovados.
-
-## 0.7.8
-
-- Restaura o segundo clique na Action como fechar/reabrir do painel lateral, sem alterar o tamanho do Chat.
-- Mantém o botão X como fechamento explícito do painel.
-- Adiciona um controle próprio de maximizar/restaurar no cabeçalho do Chat, preservando o modo lateral como padrão.
-- Mantém o painel pré-carregado em 1×1 quando fechado para preservar a abertura rápida da v0.7.7.
-
-## 0.7.7
-
-- Reduz o tempo percebido de abertura do Chat mantendo o painel lateral pré-carregado em segundo plano e hidratando o histórico completo após a interface estar disponível.
+- Consolida o Chat em painel lateral persistente, com fechamento pelo X ou por um segundo clique na Action e controle dedicado para maximizar/restaurar.
+- Torna a expansão funcional também em telas móveis e mantém o modo lateral como padrão ao reabrir.
+- Reduz o caminho crítico de abertura preparando os recursos essenciais em cache sem manter um painel oculto ativo.
 - Adiciona o botão ENVIAR com estado independente do rolador e cor correspondente ao Mestre ou perfil atribuído.
-- Substitui o ícone do Chat pelo d6 fornecido ao projeto, preservando o número central em pixels opacos para manter a leitura na toolbar do Owlbear.
-- Substitui o aviso textual dos três maiores resultados por indicação visual dos dados efetivamente utilizados na soma.
-- Preserva DT, histórico, persistência, permissões, críticos e integração com Fichas.
+- Usa o d6 fornecido ao projeto como ícone do Chat, preservando o número central em tamanhos reduzidos.
+- Sinaliza visualmente os dados efetivamente utilizados no resultado de testes com quatro dados.
+- Preserva DT, críticos, histórico persistente, permissões e integração com Fichas.
 
 ## 0.7.6
 
-- Corrige a validação do manifesto do Chat e consolida o painel lateral persistente como base estável.
+- Base estável anterior do ecossistema.

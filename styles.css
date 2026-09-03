@@ -581,8 +581,8 @@ button {
 @media (max-width:460px) {
   .app-header { display: grid; grid-template-columns: 1fr; align-items: center; gap: 8px; }
   .brand { justify-self: start; }
-  .header-actions { width: 100%; justify-content: flex-start; flex-wrap: nowrap; }
-  .open-sheet { margin-left: auto; }
+  .header-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .open-sheet { margin-left: 0; }
 }
 
 html[data-surface="panel"],html[data-surface="panel"] body {
