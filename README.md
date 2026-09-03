@@ -1,10 +1,10 @@
-# OP2 Playtest Chat — v0.7.7
+# OP2 Playtest Chat — v0.7.8
 
 Este é um conteúdo não oficial, publicado sob a Licença da Comunidade de Ordem Paranormal.
 
 Extensão gratuita de Chat para Owlbear Rodeo integrada ao OP2 Playtest Fichas. Reúne mensagens, rolagens com pool de até quatro dados, DT compartilhada, cards sincronizados e histórico persistente.
 
-O Chat abre como painel lateral persistente no lado esquerdo da Room. O painel é preparado em segundo plano para reduzir o tempo de abertura e permanece disponível enquanto você interage com o mapa.
+O Chat abre como painel lateral persistente no lado esquerdo da Room. O painel é preparado em segundo plano para reduzir o tempo de abertura e permanece disponível enquanto você interage com o mapa. O X fecha o painel e o controle ao lado dele alterna entre o modo lateral e o modo maximizado.
 
 ## Instalação
 

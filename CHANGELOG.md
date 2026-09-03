@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.8
+
+- Restaura o segundo clique na Action como fechar/reabrir do painel lateral, sem alterar o tamanho do Chat.
+- Mantém o botão X como fechamento explícito do painel.
+- Adiciona um controle próprio de maximizar/restaurar no cabeçalho do Chat, preservando o modo lateral como padrão.
+- Mantém o painel pré-carregado em 1×1 quando fechado para preservar a abertura rápida da v0.7.7.
+
 ## 0.7.7
 
 - Reduz o tempo percebido de abertura do Chat mantendo o painel lateral pré-carregado em segundo plano e hidratando o histórico completo após a interface estar disponível.

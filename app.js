@@ -4,7 +4,7 @@ import {rollOp2Test,rollSimple} from './roll.js';
 import {renderResultCard} from './roll-card.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,MAX_MESSAGE_LENGTH,escapeHtml,makeId,mergeEntries,relativeTime} from './chat-core.js';
 import {normalizeRuntimeState,SYNC_CHANNEL} from './core-shared.js';
-import {closeChatPanel,syncChatPanelSize} from './panel.js';
+import {closeChatPanel,syncChatPanelSize,toggleChatPanelMaximize} from './panel.js';
 
 const $=s=>document.querySelector(s);
 const SHEETS_BASE_URL='https://op2fichas.onrender.com';
@@ -36,9 +36,23 @@ function setTheme(){
   $('#clearHistory')?.classList.toggle('hidden',state.role!=='GM');
   $('#openSheet').textContent=state.role==='GM'?'PERSONAGENS':'ABRIR FICHA';
   $('#closePanel')?.classList.toggle('hidden',!IS_PANEL);
+  $('#maximizePanel')?.classList.toggle('hidden',!IS_PANEL);
   renderDtControl();
 }
 function toast(text){const el=$('#toast');el.textContent=text;el.classList.remove('hidden');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>el.classList.add('hidden'),2800)}
+function setMaximizeState(expanded){
+  const button=$('#maximizePanel');
+  if(!button)return;
+  button.classList.toggle('is-maximized',Boolean(expanded));
+  button.setAttribute('aria-label',expanded?'Restaurar tamanho do Chat':'Maximizar Chat');
+  button.title=expanded?'Restaurar tamanho do Chat':'Maximizar Chat';
+}
+async function toggleMaximize(){
+  const button=$('#maximizePanel');
+  if(!button||button.disabled)return;
+  button.disabled=true;
+  try{setMaximizeState(await toggleChatPanelMaximize())}finally{button.disabled=false}
+}
 function canDelete(e){return state.role==='GM'||e.authorId===state.playerId}
 
 function resultCard(e){
@@ -130,7 +144,7 @@ async function setup(){
   $('#message').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitMessage({allowRollCommand:true})}});
   $('#sendMessage').addEventListener('click',()=>submitMessage({allowRollCommand:false}));
   $('#freeRoll').addEventListener('click',freeRoll);$('#clearPool').addEventListener('click',()=>{state.pool=[];renderDiceTray()});
-  $('#openSheet').addEventListener('click',openSheet);$('#clearHistory').addEventListener('click',clearHistory);$('#closePanel').addEventListener('click',()=>closeChatPanel());
+  $('#openSheet').addEventListener('click',openSheet);$('#clearHistory').addEventListener('click',clearHistory);$('#maximizePanel').addEventListener('click',toggleMaximize);$('#closePanel').addEventListener('click',()=>closeChatPanel());
   $('#dtInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitDt();e.currentTarget.blur()}if(e.key==='Escape'){e.currentTarget.value=state.roomState.testDt??'';e.currentTarget.blur()}});
   $('#dtInput').addEventListener('blur',commitDt);$('#clearDt').addEventListener('click',()=>{setRoomDt(null);$('#dtInput').value=''});
   if(!OBR.isAvailable){$('#loading').classList.add('hidden');state.role='GM';setTheme();return}
@@ -168,11 +182,11 @@ async function setup(){
       resizeTimer=setTimeout(()=>{
         if(!panelIsVisible())return;
         void requestHistory();
-        void syncChatPanelSize();
+        void syncChatPanelSize().then(setMaximizeState);
       },80);
     };
     window.addEventListener('resize',resync,{passive:true});
-    if(panelIsVisible())void requestHistory();
+    if(panelIsVisible()){void requestHistory();void syncChatPanelSize().then(setMaximizeState)}
   }else{
     void requestHistory();
   }
