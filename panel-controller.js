@@ -2,8 +2,10 @@ import OBR from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHAT_PANEL_ID,PANEL_MODE} from './panel-constants.js';
 
 const PANEL_URL='/?surface=panel';
-const HIDDEN_SIZE=1;
 const MAX_MARGIN=8;
+const SDK_OPEN_DEADLINE_MS=750;
+const SDK_CLOSE_DEADLINE_MS=500;
+const SDK_RESIZE_DEADLINE_MS=500;
 const FALLBACK_DOCKED=Object.freeze({width:430,height:702,left:8,top:58});
 
 let mode=PANEL_MODE.HIDDEN;
@@ -13,6 +15,7 @@ let cachedDocked={...FALLBACK_DOCKED};
 let cachedMaximized={width:1264,height:654,left:8,top:58};
 let controllerQueue=Promise.resolve();
 let geometryRefresh=null;
+let lifecycleEpoch=0;
 
 export function getChatPanelGeometry(viewportWidth,viewportHeight){
   const vw=Math.max(320,Number(viewportWidth)||1280);
@@ -54,8 +57,22 @@ export function getMaximizedChatPanelGeometry(viewportWidth,viewportHeight){
   };
 }
 
+function settleWithin(promise,timeoutMs){
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=result=>{if(settled)return;settled=true;clearTimeout(timer);resolve(result)};
+    const timer=setTimeout(()=>finish({status:'timeout'}),timeoutMs);
+    Promise.resolve(promise).then(
+      value=>finish({status:'fulfilled',value}),
+      error=>finish({status:'rejected',error}),
+    );
+  });
+}
+
 async function readViewport(){
-  const [vw,vh]=await Promise.all([OBR.viewport.getWidth(),OBR.viewport.getHeight()]);
+  const result=await settleWithin(Promise.all([OBR.viewport.getWidth(),OBR.viewport.getHeight()]),450);
+  if(result.status!=='fulfilled')throw result.error||new Error('Viewport indisponível');
+  const [vw,vh]=result.value;
   return {vw:Number(vw)||1280,vh:Number(vh)||720};
 }
 
@@ -76,8 +93,8 @@ export function primeChatPanelGeometry(){
   return geometryRefresh;
 }
 
-async function openRaw(geometry){
-  await OBR.popover.open({
+function popoverConfig(geometry){
+  return {
     id:CHAT_PANEL_ID,
     url:PANEL_URL,
     width:geometry.width,
@@ -89,82 +106,114 @@ async function openRaw(geometry){
     hidePaper:true,
     disableClickAway:true,
     marginThreshold:0,
-  });
+  };
+}
+
+async function openRaw(geometry,epoch){
+  let request;
+  try{
+    request=OBR.popover.open(popoverConfig(geometry));
+  }catch(error){
+    if(epoch===lifecycleEpoch){mode=PANEL_MODE.HIDDEN;mounted=false;mountedTop=null}
+    throw error;
+  }
+
+  // The host receives the open command immediately. Do not let a slow iframe
+  // navigation hold the lifecycle queue forever.
   mounted=true;
   mountedTop=geometry.top;
+  const result=await settleWithin(request,SDK_OPEN_DEADLINE_MS);
+  if(result.status==='rejected'&&epoch===lifecycleEpoch){
+    mode=PANEL_MODE.HIDDEN;
+    mounted=false;
+    mountedTop=null;
+    throw result.error;
+  }
+}
+
+async function closeRaw(){
+  let request;
+  try{request=OBR.popover.close(CHAT_PANEL_ID)}catch{return}
+  await settleWithin(request,SDK_CLOSE_DEADLINE_MS);
 }
 
 async function resizeRaw(geometry){
-  await Promise.all([
+  const request=Promise.all([
     OBR.popover.setWidth(CHAT_PANEL_ID,geometry.width),
     OBR.popover.setHeight(CHAT_PANEL_ID,geometry.height),
   ]);
+  const result=await settleWithin(request,SDK_RESIZE_DEADLINE_MS);
+  if(result.status==='rejected')throw result.error;
 }
 
-async function ensureGeometry(){
-  try{return await refreshGeometry()}catch{return {docked:cachedDocked,maximized:cachedMaximized}}
-}
+function refreshVisibleGeometry(epoch){
+  void primeChatPanelGeometry().then(async({docked,maximized})=>{
+    if(epoch!==lifecycleEpoch||mode===PANEL_MODE.HIDDEN||!mounted)return;
+    const target=mode===PANEL_MODE.MAXIMIZED?maximized:docked;
 
-async function showGeometry(geometry){
-  if(!mounted){
-    await openRaw(geometry);
-    return;
-  }
+    // Popovers cannot be repositioned after opening. Recreate only if a real
+    // viewport class change moves the top anchor (desktop <-> compact).
+    if(mountedTop!==target.top){
+      await closeRaw();
+      if(epoch!==lifecycleEpoch||mode===PANEL_MODE.HIDDEN)return;
+      mounted=false;
+      mountedTop=null;
+      await openRaw(target,epoch).catch(()=>{});
+      return;
+    }
 
-  // Popovers cannot be repositioned after opening. Recreate only when crossing
-  // the desktop/mobile top anchor; ordinary reopen cycles stay mounted and fast.
-  if(mountedTop!==geometry.top){
-    try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
-    mounted=false;
-    mountedTop=null;
-    await openRaw(geometry);
-    return;
-  }
-
-  try{
-    await resizeRaw(geometry);
-  }catch{
-    mounted=false;
-    mountedTop=null;
-    await openRaw(geometry);
-  }
+    await resizeRaw(target).catch(()=>{});
+  }).catch(()=>{});
 }
 
 async function showDockedOnce(){
   if(!OBR.isAvailable)return getState();
-  const {docked}=await ensureGeometry();
+  const epoch=++lifecycleEpoch;
   mode=PANEL_MODE.DOCKED;
-  await showGeometry(docked);
+
+  // Open from the already primed/fallback geometry first. Viewport refresh is
+  // deliberately deferred so a pair of SDK size reads never blocks the click.
+  await openRaw(cachedDocked,epoch);
+  refreshVisibleGeometry(epoch);
   return getState();
 }
 
 async function hideOnce(){
   if(!OBR.isAvailable)return getState();
-  mode=PANEL_MODE.HIDDEN;
-  if(!mounted)return getState();
+  ++lifecycleEpoch;
 
-  // Keep the already hydrated iframe mounted at 1×1. This makes every reopen a
-  // resize instead of a full iframe/SDK/history boot while still removing the
-  // panel from the usable interface.
-  try{
-    await Promise.all([
-      OBR.popover.setWidth(CHAT_PANEL_ID,HIDDEN_SIZE),
-      OBR.popover.setHeight(CHAT_PANEL_ID,HIDDEN_SIZE),
-    ]);
-  }catch{
-    mounted=false;
-    mountedTop=null;
-  }
+  // Closing is a visibility operation only. Never resize here: width/height
+  // changes are reserved exclusively for the maximize/restore control.
+  mode=PANEL_MODE.HIDDEN;
+  mounted=false;
+  mountedTop=null;
+  await closeRaw();
   return getState();
 }
 
 async function setModeOnce(nextMode){
   if(!OBR.isAvailable)return getState();
   if(nextMode===PANEL_MODE.HIDDEN)return hideOnce();
-  const {docked,maximized}=await ensureGeometry();
-  const target=nextMode===PANEL_MODE.MAXIMIZED?maximized:docked;
-  mode=nextMode===PANEL_MODE.MAXIMIZED?PANEL_MODE.MAXIMIZED:PANEL_MODE.DOCKED;
-  await showGeometry(target);
+  if(mode===PANEL_MODE.HIDDEN)return getState();
+
+  const epoch=++lifecycleEpoch;
+  const normalized=nextMode===PANEL_MODE.MAXIMIZED?PANEL_MODE.MAXIMIZED:PANEL_MODE.DOCKED;
+  mode=normalized;
+  const target=normalized===PANEL_MODE.MAXIMIZED?cachedMaximized:cachedDocked;
+
+  if(!mounted){
+    await openRaw(target,epoch);
+  }else if(mountedTop!==target.top){
+    await closeRaw();
+    if(epoch!==lifecycleEpoch||mode===PANEL_MODE.HIDDEN)return getState();
+    mounted=false;
+    mountedTop=null;
+    await openRaw(target,epoch);
+  }else{
+    await resizeRaw(target);
+  }
+
+  refreshVisibleGeometry(epoch);
   return getState();
 }
 
@@ -180,7 +229,9 @@ async function toggleMaximizeOnce(){
 
 async function syncOnce(){
   if(mode===PANEL_MODE.HIDDEN)return getState();
-  return setModeOnce(mode);
+  const epoch=lifecycleEpoch;
+  refreshVisibleGeometry(epoch);
+  return getState();
 }
 
 function enqueue(operation){

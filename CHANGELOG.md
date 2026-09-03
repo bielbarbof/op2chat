@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.4
+
+- Corrige o fechamento do Chat para usar exclusivamente `popover.close`, sem redimensionar o painel.
+- Mantém expandir/restaurar restrito ao botão dedicado imediatamente à esquerda do X.
+- Evita filas travadas por chamadas lentas do host e abre o painel com geometria já preparada em cache antes de atualizar medidas do viewport.
+- Preserva UI, rolagens, histórico, DT, mensagens, responsividade e integração com Fichas.
+
 ## 0.8.3
 
 - Torna o ciclo de abrir, fechar e reabrir do painel independente de consultas de dimensão do popover.

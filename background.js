@@ -60,9 +60,9 @@ function primePanelResources(){
     './panel-constants.js',
     './panel.js',
     './panel-controller.js',
-    './fonts.css?v=0.8.3',
-    './styles.css?v=0.8.3',
-    './roll-card.css?v=0.8.3',
+    './fonts.css?v=0.8.4',
+    './styles.css?v=0.8.4',
+    './roll-card.css?v=0.8.4',
     './app.js',
     './characters.js',
     './chat-core.js',
@@ -183,6 +183,8 @@ async function setup(){
   OBR.broadcast.onMessage(PANEL_CONTROL_CHANNEL,handlePanelControl);
   OBR.action.onOpenChange(open=>{
     if(!open)return;
+    // The native Action is only the trigger. It always toggles visibility;
+    // maximize/restore remains exclusive to the dedicated in-panel button.
     void OBR.action.close().catch(()=>{});
     void toggleChatPanel().then(()=>publishPanelState()).catch(()=>{});
   });
