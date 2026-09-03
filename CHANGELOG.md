@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+- Separa definitivamente as ações de fechar e maximizar: X e segundo clique na Action fecham o Chat; somente o controle dedicado alterna entre lateral e maximizado.
+- Mantém o botão de expandir/restaurar visível também no painel lateral reduzido.
+- Preserva o pré-carregamento do painel, histórico, sincronização e demais comportamentos aprovados.
+
 ## 0.7.8
 
 - Restaura o segundo clique na Action como fechar/reabrir do painel lateral, sem alterar o tamanho do Chat.

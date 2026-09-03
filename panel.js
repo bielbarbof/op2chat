@@ -1,6 +1,8 @@
 import OBR from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 
 export const CHAT_PANEL_ID='com.op2.playtest.chat/side-panel';
+export const PANEL_CONTROL_CHANNEL='com.op2.playtest.chat/panel-control-v1';
+
 const PANEL_URL='/?surface=panel';
 const FALLBACK_GEOMETRY=Object.freeze({width:430,height:702,left:8,top:58});
 const HIDDEN_SIZE=1;
@@ -8,8 +10,8 @@ const MAX_MARGIN=8;
 
 let cachedGeometry={...FALLBACK_GEOMETRY};
 let mounted=false;
-let visible=false;
 let mountedTop=null;
+let mode='hidden';
 let panelQueue=Promise.resolve();
 
 export function getChatPanelGeometry(viewportWidth,viewportHeight){
@@ -48,10 +50,10 @@ async function readViewport(){
   return {vw:Number(vw)||1280,vh:Number(vh)||720};
 }
 
-async function measureGeometry(){
+async function measureDockedGeometry(){
   const {vw,vh}=await readViewport();
   cachedGeometry=getChatPanelGeometry(vw,vh);
-  return cachedGeometry;
+  return {docked:cachedGeometry,maximized:getMaximizedChatPanelGeometry(vw,vh)};
 }
 
 async function openRaw(width,height,geometry){
@@ -73,18 +75,39 @@ async function openRaw(width,height,geometry){
   mountedTop=g.top;
 }
 
-async function panelWidth(){
-  try{return Number(await OBR.popover.getWidth(CHAT_PANEL_ID))||0}catch{return 0}
+async function resizeTo(geometry){
+  await Promise.all([
+    OBR.popover.setWidth(CHAT_PANEL_ID,geometry.width),
+    OBR.popover.setHeight(CHAT_PANEL_ID,geometry.height),
+  ]);
+}
+
+async function applyVisibleGeometry(geometry){
+  if(!mounted||mountedTop!==geometry.top){
+    if(mounted){
+      try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
+    }
+    mounted=false;
+    await openRaw(geometry.width,geometry.height,geometry);
+    return;
+  }
+  try{
+    await resizeTo(geometry);
+  }catch{
+    mounted=false;
+    await openRaw(geometry.width,geometry.height,geometry);
+  }
 }
 
 async function ensureMountedHidden(){
   if(!OBR.isAvailable||mounted)return;
   try{
     await openRaw(HIDDEN_SIZE,HIDDEN_SIZE,cachedGeometry);
-    visible=false;
-    void measureGeometry().catch(()=>{});
+    mode='hidden';
+    void measureDockedGeometry().catch(()=>{});
   }catch{
     mounted=false;
+    mountedTop=null;
   }
 }
 
@@ -94,133 +117,86 @@ export function warmChatPanel(){
   return task;
 }
 
-async function resizeTo(geometry){
-  await Promise.all([
-    OBR.popover.setWidth(CHAT_PANEL_ID,geometry.width),
-    OBR.popover.setHeight(CHAT_PANEL_ID,geometry.height),
-  ]);
-}
-
-async function showOnce(){
+async function showDockedOnce(){
   if(!OBR.isAvailable)return;
-  const initial=cachedGeometry;
-  if(!mounted){
-    try{
-      await openRaw(initial.width,initial.height,initial);
-      visible=true;
-    }catch{
-      mounted=false;
-      throw new Error('Não foi possível abrir o painel do Chat.');
-    }
-  }else{
-    try{
-      await resizeTo(initial);
-      visible=true;
-    }catch{
-      mounted=false;
-      await openRaw(initial.width,initial.height,initial);
-      visible=true;
-    }
-  }
-
-  void measureGeometry().then(async geometry=>{
-    if(!visible)return;
-    try{
-      if(mountedTop!==geometry.top){
-        await OBR.popover.close(CHAT_PANEL_ID);
-        mounted=false;
-        await openRaw(geometry.width,geometry.height,geometry);
-        visible=true;
-      }else{
-        await resizeTo(geometry);
-      }
-    }catch{}
+  mode='docked';
+  await applyVisibleGeometry(cachedGeometry);
+  void measureDockedGeometry().then(({docked})=>{
+    if(mode!=='docked')return;
+    return applyVisibleGeometry(docked);
   }).catch(()=>{});
 }
 
-async function hideOnce(){
+async function closeOnce(){
   if(!OBR.isAvailable)return;
-  try{
-    await Promise.all([
-      OBR.popover.setWidth(CHAT_PANEL_ID,HIDDEN_SIZE),
-      OBR.popover.setHeight(CHAT_PANEL_ID,HIDDEN_SIZE),
-    ]);
-    mounted=true;
-  }catch{
-    mounted=false;
-  }
-  visible=false;
+  mode='hidden';
+  try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
+  mounted=false;
+  mountedTop=null;
 }
 
 async function toggleOnce(){
   if(!OBR.isAvailable)return;
-  const width=await panelWidth();
-  if(width>0)mounted=true;
-  if(width>HIDDEN_SIZE+1){
-    await hideOnce();
+  if(mode==='hidden'){
+    await showDockedOnce();
     return;
   }
-  visible=false;
-  await showOnce();
+  await closeOnce();
 }
 
 export function toggleChatPanel(){
   const task=panelQueue.then(toggleOnce,toggleOnce);
   panelQueue=task.catch(()=>{});
+  task.then(()=>{if(mode==='hidden')void warmChatPanel()},()=>{if(mode==='hidden')void warmChatPanel()});
   return task;
 }
 
-export async function closeChatPanel(){
-  if(!OBR.isAvailable)return;
-  try{
-    await Promise.all([
-      OBR.popover.setWidth(CHAT_PANEL_ID,HIDDEN_SIZE),
-      OBR.popover.setHeight(CHAT_PANEL_ID,HIDDEN_SIZE),
-    ]);
-    mounted=true;
-  }catch{
-    mounted=false;
-  }
-  visible=false;
+export function closeChatPanel(){
+  const task=panelQueue.then(closeOnce,closeOnce);
+  panelQueue=task.catch(()=>{});
+  task.then(()=>void warmChatPanel(),()=>void warmChatPanel());
+  return task;
 }
 
-function isExpandedWidth(currentWidth,docked,maximized){
-  if(maximized.width<=docked.width+24)return false;
-  const threshold=docked.width+Math.min(120,Math.max(40,(maximized.width-docked.width)*0.35));
-  return currentWidth>=threshold;
-}
-
-export async function toggleChatPanelMaximize(){
-  if(!OBR.isAvailable)return false;
-  const [{vw,vh},currentWidth]=await Promise.all([readViewport(),panelWidth()]);
-  const docked=getChatPanelGeometry(vw,vh);
-  const maximized=getMaximizedChatPanelGeometry(vw,vh);
-  if(maximized.width<=docked.width+24)return false;
-  const expanded=isExpandedWidth(currentWidth,docked,maximized);
-  await resizeTo(expanded?docked:maximized);
-  mounted=true;
-  visible=true;
-  mountedTop=docked.top;
-  cachedGeometry=docked;
-  return !expanded;
-}
-
-export async function syncChatPanelSize(){
-  if(!OBR.isAvailable)return false;
-  try{
-    const [{vw,vh},currentWidth]=await Promise.all([readViewport(),panelWidth()]);
-    if(currentWidth<=HIDDEN_SIZE+1)return false;
-    const docked=getChatPanelGeometry(vw,vh);
-    const maximized=getMaximizedChatPanelGeometry(vw,vh);
-    const expanded=isExpandedWidth(currentWidth,docked,maximized);
-    cachedGeometry=docked;
-    if(mountedTop!==null&&mountedTop!==docked.top)return expanded;
-    await resizeTo(expanded?maximized:docked);
-    mounted=true;
-    visible=true;
-    mountedTop=docked.top;
-    return expanded;
-  }catch{
+async function toggleMaximizeOnce(){
+  if(!OBR.isAvailable||mode==='hidden')return false;
+  const {docked,maximized}=await measureDockedGeometry();
+  if(maximized.width<=docked.width+24){
+    mode='docked';
+    await applyVisibleGeometry(docked);
     return false;
   }
+  if(mode==='maximized'){
+    mode='docked';
+    await applyVisibleGeometry(docked);
+    return false;
+  }
+  mode='maximized';
+  await applyVisibleGeometry(maximized);
+  return true;
+}
+
+export function toggleChatPanelMaximize(){
+  const task=panelQueue.then(toggleMaximizeOnce,toggleMaximizeOnce);
+  panelQueue=task.catch(()=>{});
+  return task;
+}
+
+async function syncSizeOnce(){
+  if(!OBR.isAvailable||mode==='hidden')return false;
+  const {docked,maximized}=await measureDockedGeometry();
+  const expanded=mode==='maximized'&&maximized.width>docked.width+24;
+  if(!expanded&&mode==='maximized')mode='docked';
+  await applyVisibleGeometry(expanded?maximized:docked);
+  return expanded;
+}
+
+export function syncChatPanelSize(){
+  const task=panelQueue.then(syncSizeOnce,syncSizeOnce);
+  panelQueue=task.catch(()=>{});
+  return task;
+}
+
+export function getChatPanelState(){
+  return {mode,visible:mode!=='hidden',expanded:mode==='maximized'};
 }

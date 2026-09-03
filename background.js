@@ -2,9 +2,25 @@ import OBR,{buildText} from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHARACTERS} from './characters.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,CHUNK_KEY,MAX_MESSAGE_LENGTH,mergeEntries,chunkEntries,makeId,bytes} from './chat-core.js';
 import {classifyOp2Result} from './roll.js';
-import {toggleChatPanel,warmChatPanel} from './panel.js';
+import {PANEL_CONTROL_CHANNEL,closeChatPanel,getChatPanelState,syncChatPanelSize,toggleChatPanel,toggleChatPanelMaximize,warmChatPanel} from './panel.js';
 
 let role='PLAYER',playerId='',connectionId='',roomId='',cachedHistory=[],writeQueue=Promise.resolve();
+
+async function publishPanelState(requestId=''){
+  await OBR.broadcast.sendMessage(PANEL_CONTROL_CHANNEL,{type:'panel-state',requestId,...getChatPanelState()},{destination:'LOCAL'}).catch(()=>{});
+}
+
+async function handlePanelControl(event){
+  const data=event.data||{};
+  if(data.type!=='panel-control')return;
+  try{
+    if(data.action==='close')await closeChatPanel();
+    else if(data.action==='toggle-maximize')await toggleChatPanelMaximize();
+    else if(data.action==='sync')await syncChatPanelSize();
+  }finally{
+    await publishPanelState(data.requestId||'');
+  }
+}
 async function resolveSender(event){if(event.connectionId===connectionId){return{ id:playerId, role, name:await OBR.player.getName(), color:await OBR.player.getColor() }}const party=await OBR.party.getPlayers();const p=party.find(x=>x.connectionId===event.connectionId);return p?{id:p.id,role:p.role,name:p.name,color:p.color}:null}
 async function assignedCharacter(senderId){const meta=await OBR.room.getMetadata();const roomState=meta[ROOM_STATE_KEY];if(!roomState?.assignments)return null;const id=Object.keys(CHARACTERS).find(cid=>roomState.assignments[cid]?.playerId===senderId);return id?CHARACTERS[id]:null}
 const ALLOWED_DICE=new Set([4,6,8,10,12,20]);
@@ -105,8 +121,9 @@ async function setup(){
   OBR.action.onOpenChange(open=>{
     if(!open)return;
     void OBR.action.close().catch(()=>{});
-    void toggleChatPanel();
+    void toggleChatPanel().then(()=>publishPanelState()).catch(()=>{});
   });
+  OBR.broadcast.onMessage(PANEL_CONTROL_CHANNEL,handlePanelControl);
   void warmChatPanel();
 
   identityReady=Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]).then(([nextRole,nextConnectionId])=>{

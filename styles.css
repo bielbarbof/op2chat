@@ -635,9 +635,6 @@ html[data-surface="panel"] .chat-column {
   color: #fff;
   outline: none;
 }
-@media (max-width:599px) {
-  html[data-surface="panel"] .panel-maximize { display:none; }
-}
 @media (max-width:510px) {
   .panel-close,.panel-maximize { width:34px; height:34px; flex-basis:34px; font-size:17px; }
 }
