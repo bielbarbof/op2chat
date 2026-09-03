@@ -1,17 +1,11 @@
 import OBR from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
-import {CHAT_PANEL_ID,PANEL_CONTROL_CHANNEL} from './panel-constants.js';
+import {CHAT_PANEL_ID} from './panel-constants.js';
 
-export {CHAT_PANEL_ID,PANEL_CONTROL_CHANNEL};
+export {CHAT_PANEL_ID};
 
 const PANEL_URL='/?surface=panel';
 const FALLBACK_GEOMETRY=Object.freeze({width:430,height:702,left:8,top:58});
 const MAX_MARGIN=8;
-
-let cachedGeometry={...FALLBACK_GEOMETRY};
-let mounted=false;
-let mountedTop=null;
-let mode='hidden';
-let panelQueue=Promise.resolve();
 
 export function getChatPanelGeometry(viewportWidth,viewportHeight){
   const vw=Math.max(320,Number(viewportWidth)||1280);
@@ -60,128 +54,110 @@ async function readViewport(){
 
 async function measureGeometry(){
   const {vw,vh}=await readViewport();
-  cachedGeometry=getChatPanelGeometry(vw,vh);
-  return {docked:cachedGeometry,maximized:getMaximizedChatPanelGeometry(vw,vh)};
+  return {
+    docked:getChatPanelGeometry(vw,vh),
+    maximized:getMaximizedChatPanelGeometry(vw,vh),
+  };
 }
 
-async function openRaw(geometry){
-  await OBR.popover.open({
-    id:CHAT_PANEL_ID,
-    url:PANEL_URL,
-    width:geometry.width,
-    height:geometry.height,
-    anchorReference:'POSITION',
-    anchorPosition:{left:geometry.left,top:geometry.top},
-    anchorOrigin:{horizontal:'LEFT',vertical:'TOP'},
-    transformOrigin:{horizontal:'LEFT',vertical:'TOP'},
-    hidePaper:true,
-    disableClickAway:true,
-    marginThreshold:0,
-  });
-  mounted=true;
-  mountedTop=geometry.top;
+async function getPanelDimensions(){
+  if(!OBR.isAvailable)return null;
+  try{
+    const [width,height]=await Promise.all([
+      OBR.popover.getWidth(CHAT_PANEL_ID),
+      OBR.popover.getHeight(CHAT_PANEL_ID),
+    ]);
+    const w=Number(width),h=Number(height);
+    if(!Number.isFinite(w)||!Number.isFinite(h)||w<=1||h<=1)return null;
+    return {width:w,height:h};
+  }catch{
+    return null;
+  }
 }
 
-async function resizeTo(geometry){
+async function resizePanel(geometry){
   await Promise.all([
     OBR.popover.setWidth(CHAT_PANEL_ID,geometry.width),
     OBR.popover.setHeight(CHAT_PANEL_ID,geometry.height),
   ]);
 }
 
-async function applyVisibleGeometry(geometry){
-  if(!mounted||mountedTop!==geometry.top){
-    if(mounted){
-      try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
-    }
-    mounted=false;
-    mountedTop=null;
-    await openRaw(geometry);
-    return;
+export async function isChatPanelOpen(){
+  return Boolean(await getPanelDimensions());
+}
+
+export async function openChatPanelDocked(){
+  if(!OBR.isAvailable)return false;
+  const {docked}=await measureGeometry();
+  const existing=await getPanelDimensions();
+  if(existing){
+    await resizePanel(docked);
+    return true;
   }
-
-  try{
-    await resizeTo(geometry);
-  }catch{
-    mounted=false;
-    mountedTop=null;
-    await openRaw(geometry);
-  }
-}
-
-async function showDockedOnce(){
-  if(!OBR.isAvailable)return;
-  mode='docked';
-  let docked=cachedGeometry;
-  try{({docked}=await measureGeometry())}catch{}
-  if(mode!=='docked')return;
-  await applyVisibleGeometry(docked);
-}
-
-async function closeOnce(){
-  if(!OBR.isAvailable)return;
-  mode='hidden';
-  try{await OBR.popover.close(CHAT_PANEL_ID)}catch{}
-  mounted=false;
-  mountedTop=null;
-}
-
-async function toggleOnce(){
-  if(!OBR.isAvailable)return;
-  if(mode==='hidden'){
-    await showDockedOnce();
-    return;
-  }
-  await closeOnce();
-}
-
-export function toggleChatPanel(){
-  const task=panelQueue.then(toggleOnce,toggleOnce);
-  panelQueue=task.catch(()=>{});
-  return task;
-}
-
-export function closeChatPanel(){
-  const task=panelQueue.then(closeOnce,closeOnce);
-  panelQueue=task.catch(()=>{});
-  return task;
-}
-
-async function toggleMaximizeOnce(){
-  if(!OBR.isAvailable||mode==='hidden')return false;
-  const {docked,maximized}=await measureGeometry();
-
-  if(mode==='maximized'){
-    mode='docked';
-    await applyVisibleGeometry(docked);
-    return false;
-  }
-
-  mode='maximized';
-  await applyVisibleGeometry(maximized);
+  await OBR.popover.open({
+    id:CHAT_PANEL_ID,
+    url:PANEL_URL,
+    width:docked.width,
+    height:docked.height,
+    anchorReference:'POSITION',
+    anchorPosition:{left:docked.left,top:docked.top},
+    anchorOrigin:{horizontal:'LEFT',vertical:'TOP'},
+    transformOrigin:{horizontal:'LEFT',vertical:'TOP'},
+    hidePaper:true,
+    disableClickAway:true,
+    marginThreshold:0,
+  });
   return true;
 }
 
-export function toggleChatPanelMaximize(){
-  const task=panelQueue.then(toggleMaximizeOnce,toggleMaximizeOnce);
-  panelQueue=task.catch(()=>{});
-  return task;
+export async function closeChatPanel(){
+  if(!OBR.isAvailable)return false;
+  try{
+    await OBR.popover.close(CHAT_PANEL_ID);
+    return true;
+  }catch{
+    return false;
+  }
 }
 
-async function syncSizeOnce(){
-  if(!OBR.isAvailable||mode==='hidden')return false;
+export async function toggleChatPanel(){
+  if(!OBR.isAvailable)return false;
+  if(await isChatPanelOpen()){
+    await closeChatPanel();
+    return false;
+  }
+  await openChatPanelDocked();
+  return true;
+}
+
+function geometryDistance(size,target){
+  return Math.abs(Number(size?.width||0)-target.width)+Math.abs(Number(size?.height||0)-target.height);
+}
+
+export async function getChatPanelExpanded(){
+  const size=await getPanelDimensions();
+  if(!size)return false;
   const {docked,maximized}=await measureGeometry();
-  const expanded=mode==='maximized';
-  await applyVisibleGeometry(expanded?maximized:docked);
-  return expanded;
+  return geometryDistance(size,maximized)<geometryDistance(size,docked);
 }
 
-export function syncChatPanelSize(){
-  const task=panelQueue.then(syncSizeOnce,syncSizeOnce);
-  panelQueue=task.catch(()=>{});
-  return task;
+export async function setChatPanelExpanded(expanded){
+  if(!OBR.isAvailable)return false;
+  const size=await getPanelDimensions();
+  if(!size)return false;
+  const {docked,maximized}=await measureGeometry();
+  await resizePanel(expanded?maximized:docked);
+  return Boolean(expanded);
 }
 
-export function getChatPanelState(){
-  return {mode,visible:mode!=='hidden',expanded:mode==='maximized'};
+export async function toggleChatPanelMaximize(){
+  const expanded=await getChatPanelExpanded();
+  return setChatPanelExpanded(!expanded);
+}
+
+export async function syncChatPanelSize(expanded){
+  if(!OBR.isAvailable)return false;
+  const size=await getPanelDimensions();
+  if(!size)return false;
+  return setChatPanelExpanded(Boolean(expanded));
 }

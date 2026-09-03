@@ -7,9 +7,9 @@
   <link rel="preconnect" href="https://esm.unpkg.com" crossorigin />
   <link rel="modulepreload" href="https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0" crossorigin />
   <title>OP2 Playtest // Chat</title>
-  <link rel="stylesheet" href="./fonts.css?v=0.8.1" />
-  <link rel="stylesheet" href="./styles.css?v=0.8.1" />
-  <link rel="stylesheet" href="./roll-card.css?v=0.8.1" />
+  <link rel="stylesheet" href="./fonts.css?v=0.8.2" />
+  <link rel="stylesheet" href="./styles.css?v=0.8.2" />
+  <link rel="stylesheet" href="./roll-card.css?v=0.8.2" />
 </head>
 <body>
   <main id="app" class="app-shell">
@@ -17,19 +17,23 @@
       <header class="app-header">
         <div class="brand"><h1>CHAT</h1></div>
         <div class="header-actions">
-          <span id="identity" class="identity-pill profile-ribbon">...</span>
-          <button id="clearHistory" class="clear-history hidden" type="button" aria-label="Limpar histórico" title="Limpar histórico"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Z"/></svg></button>
-          <div id="dtControl" class="dt-control hidden" title="DT atual da mesa">
-            <label for="dtInput">DT</label>
-            <input id="dtInput" type="number" inputmode="numeric" min="1" max="999" placeholder="—" aria-label="DT atual da mesa" />
-            <button id="clearDt" type="button" aria-label="Limpar DT" title="Limpar DT">×</button>
+          <div class="header-actions-left">
+            <span id="identity" class="identity-pill profile-ribbon">...</span>
+            <button id="clearHistory" class="clear-history hidden" type="button" aria-label="Limpar histórico" title="Limpar histórico"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Z"/></svg></button>
+            <div id="dtControl" class="dt-control hidden" title="DT atual da mesa">
+              <label for="dtInput">DT</label>
+              <input id="dtInput" type="number" inputmode="numeric" min="1" max="999" placeholder="—" aria-label="DT atual da mesa" />
+              <button id="clearDt" type="button" aria-label="Limpar DT" title="Limpar DT">×</button>
+            </div>
           </div>
-          <button id="openSheet" class="open-sheet">ABRIR FICHA</button>
-          <button id="maximizePanel" class="panel-maximize hidden" type="button" aria-label="Maximizar Chat" title="Maximizar Chat">
-            <svg class="panel-maximize-icon icon-expand" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/></svg>
-            <svg class="panel-maximize-icon icon-restore" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5M9 9l-5-5M15 9l5-5M9 15l-5 5M15 15l5 5"/></svg>
-          </button>
-          <button id="closePanel" class="panel-close hidden" type="button" aria-label="Fechar Chat" title="Fechar Chat">×</button>
+          <div class="header-actions-right">
+            <button id="openSheet" class="open-sheet">ABRIR FICHA</button>
+            <button id="maximizePanel" class="panel-maximize hidden" type="button" aria-label="Maximizar Chat" title="Maximizar Chat">
+              <svg class="panel-maximize-icon icon-expand" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/></svg>
+              <svg class="panel-maximize-icon icon-restore" aria-hidden="true" viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5M9 9l-5-5M15 9l5-5M9 15l-5 5M15 15l5 5"/></svg>
+            </button>
+            <button id="closePanel" class="panel-close hidden" type="button" aria-label="Fechar Chat" title="Fechar Chat">×</button>
+          </div>
         </div>
       </header>
       <section id="feed" class="feed" aria-live="polite"></section>

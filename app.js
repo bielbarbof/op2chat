@@ -4,7 +4,7 @@ import {rollOp2Test,rollSimple} from './roll.js';
 import {renderResultCard} from './roll-card.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,MAX_MESSAGE_LENGTH,escapeHtml,makeId,mergeEntries,relativeTime} from './chat-core.js';
 import {normalizeRuntimeState,SYNC_CHANNEL} from './core-shared.js';
-import {PANEL_CONTROL_CHANNEL} from './panel-constants.js';
+import {closeChatPanel,getChatPanelExpanded,setChatPanelExpanded,syncChatPanelSize} from './panel.js';
 
 const $=s=>document.querySelector(s);
 const SHEETS_BASE_URL='https://op2fichas.onrender.com';
@@ -15,7 +15,7 @@ const DIE_SIDES=[4,6,8,10,12,20];
 const IS_PANEL=new URLSearchParams(location.search).get('surface')==='panel';
 document.documentElement.dataset.surface=IS_PANEL?'panel':'standalone';
 const state={role:'PLAYER',playerId:'preview',connectionId:'preview',roomState:defaultRuntimeState(),entries:[],historyParts:new Map(),pool:[],toastTimer:null,dtQueue:Promise.resolve(),pendingSharedMutations:new Map(),historyRequested:false};
-const panelRequests=new Map();
+let panelExpanded=false;
 const dieImg=s=>`<img class="die-asset" src="./assets/dice/d${Number(s)}.png" alt="d${Number(s)}" />`;
 
 function assignedId(){return Object.keys(CHARACTERS).find(id=>state.roomState.assignments?.[id]?.playerId===state.playerId)||null}
@@ -48,39 +48,22 @@ function setMaximizeState(expanded){
   button.setAttribute('aria-label',expanded?'Restaurar tamanho do Chat':'Maximizar Chat');
   button.title=expanded?'Restaurar tamanho do Chat':'Maximizar Chat';
 }
-function onPanelControl(event){
-  const data=event.data||{};
-  if(data.type!=='panel-state')return;
-  setMaximizeState(Boolean(data.expanded));
-  if(data.requestId&&panelRequests.has(data.requestId)){
-    const resolve=panelRequests.get(data.requestId);
-    panelRequests.delete(data.requestId);
-    resolve(data);
-  }
-}
-async function requestPanelControl(action,{waitForState=false}={}){
-  if(!OBR.isAvailable||!IS_PANEL)return null;
-  const requestId=makeId();
-  let response=null;
-  if(waitForState){
-    response=new Promise(resolve=>{
-      const timer=setTimeout(()=>{panelRequests.delete(requestId);resolve(null)},1600);
-      panelRequests.set(requestId,data=>{clearTimeout(timer);resolve(data)});
-    });
-  }
-  await OBR.broadcast.sendMessage(PANEL_CONTROL_CHANNEL,{type:'panel-control',action,requestId},{destination:'LOCAL'});
-  return response?await response:null;
-}
 async function toggleMaximize(){
   const button=$('#maximizePanel');
-  if(!button||button.disabled)return;
+  if(!button||button.disabled||!OBR.isAvailable||!IS_PANEL)return;
   button.disabled=true;
-  try{await requestPanelControl('toggle-maximize',{waitForState:true})}
-  catch{toast('Não foi possível alterar o tamanho do Chat.')}
-  finally{button.disabled=false}
+  try{
+    panelExpanded=await setChatPanelExpanded(!panelExpanded);
+    setMaximizeState(panelExpanded);
+  }catch{
+    toast('Não foi possível alterar o tamanho do Chat.');
+  }finally{
+    button.disabled=false;
+  }
 }
 function closePanel(){
-  void requestPanelControl('close').catch(()=>toast('Não foi possível fechar o Chat.'));
+  if(!OBR.isAvailable||!IS_PANEL)return;
+  void closeChatPanel();
 }
 function canDelete(e){return state.role==='GM'||e.authorId===state.playerId}
 
@@ -179,7 +162,6 @@ async function setup(){
   if(!OBR.isAvailable){$('#loading').classList.add('hidden');state.role='GM';setTheme();return}
 
   await new Promise(r=>OBR.onReady(r));
-  if(IS_PANEL)OBR.broadcast.onMessage(PANEL_CONTROL_CHANNEL,onPanelControl);
   const [nextRole,nextConnectionId,meta]=await Promise.all([
     OBR.player.getRole(),
     OBR.player.getConnectionId(),
@@ -207,16 +189,18 @@ async function setup(){
   if(IS_PANEL){
     let resizeTimer=null;
     const panelIsVisible=()=>window.innerWidth>100&&window.innerHeight>100;
+    try{panelExpanded=await getChatPanelExpanded()}catch{panelExpanded=false}
+    setMaximizeState(panelExpanded);
     const resync=()=>{
       clearTimeout(resizeTimer);
       resizeTimer=setTimeout(()=>{
         if(!panelIsVisible())return;
         void requestHistory();
-        void requestPanelControl('sync',{waitForState:true});
+        void syncChatPanelSize(panelExpanded).catch(()=>{});
       },140);
     };
     window.addEventListener('resize',resync,{passive:true});
-    if(panelIsVisible()){void requestHistory();void requestPanelControl('sync',{waitForState:true})}
+    if(panelIsVisible())void requestHistory();
   }else{
     void requestHistory();
   }

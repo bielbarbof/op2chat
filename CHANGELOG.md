@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.1
+## 0.8.2
 
 - Consolida o Chat em painel lateral persistente, com fechamento pelo X ou por um segundo clique na Action e controle dedicado para maximizar/restaurar.
 - Torna a expansão funcional também em telas móveis e mantém o modo lateral como padrão ao reabrir.

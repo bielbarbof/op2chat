@@ -2,52 +2,18 @@ import OBR,{buildText} from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHARACTERS} from './characters.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,CHUNK_KEY,MAX_MESSAGE_LENGTH,mergeEntries,chunkEntries,makeId,bytes} from './chat-core.js';
 import {classifyOp2Result} from './roll.js';
-import {PANEL_CONTROL_CHANNEL,closeChatPanel,getChatPanelState,syncChatPanelSize,toggleChatPanel,toggleChatPanelMaximize} from './panel.js';
 
 let role='PLAYER',playerId='',connectionId='',roomId='',cachedHistory=[],writeQueue=Promise.resolve();
-const panelControlTasks=new Map();
-
-async function publishPanelState(requestId=''){
-  await OBR.broadcast.sendMessage(PANEL_CONTROL_CHANNEL,{type:'panel-state',requestId,...getChatPanelState()},{destination:'LOCAL'}).catch(()=>{});
-}
-
-function runPanelControl(action){
-  if(action==='toggle')return toggleChatPanel();
-  if(action==='close')return closeChatPanel();
-  if(action==='toggle-maximize')return toggleChatPanelMaximize();
-  if(action==='sync')return syncChatPanelSize();
-  return Promise.resolve();
-}
-
-async function handlePanelControl(event){
-  const data=event.data||{};
-  if(data.type!=='panel-control')return;
-  const requestId=String(data.requestId||'');
-  let task=requestId?panelControlTasks.get(requestId):null;
-
-  if(!task){
-    task=Promise.resolve().then(()=>runPanelControl(data.action));
-    if(requestId){
-      panelControlTasks.set(requestId,task);
-      void task.finally(()=>{
-        setTimeout(()=>panelControlTasks.delete(requestId),4000);
-      }).catch(()=>{});
-    }
-  }
-
-  try{await task}catch{}
-  await publishPanelState(requestId);
-}
-
 function primePanelResources(){
   const resources=[
     '/?surface=panel',
     './launcher.html',
     './launcher.js',
     './panel-constants.js',
-    './fonts.css?v=0.8.1',
-    './styles.css?v=0.8.1',
-    './roll-card.css?v=0.8.1',
+    './panel.js',
+    './fonts.css?v=0.8.2',
+    './styles.css?v=0.8.2',
+    './roll-card.css?v=0.8.2',
     './app.js',
     './characters.js',
     './chat-core.js',
@@ -162,8 +128,6 @@ async function setup(){
   if(!OBR.isAvailable)return;
   primePanelResources();
   await new Promise(r=>OBR.onReady(r));
-
-  OBR.broadcast.onMessage(PANEL_CONTROL_CHANNEL,handlePanelControl);
 
   identityReady=Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]).then(([nextRole,nextConnectionId])=>{
     role=nextRole;
