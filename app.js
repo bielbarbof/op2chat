@@ -4,7 +4,7 @@ import {rollOp2Test,rollSimple} from './roll.js';
 import {renderResultCard} from './roll-card.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,MAX_MESSAGE_LENGTH,escapeHtml,makeId,mergeEntries,relativeTime} from './chat-core.js';
 import {normalizeRuntimeState,SYNC_CHANNEL} from './core-shared.js';
-import {closeChatPanel,getChatPanelExpanded,setChatPanelExpanded,syncChatPanelSize} from './panel.js';
+import {closeChatPanel,getChatPanelExpanded,onChatPanelState,setChatPanelExpanded,syncChatPanelSize} from './panel.js';
 
 const $=s=>document.querySelector(s);
 const SHEETS_BASE_URL='https://op2fichas.onrender.com';
@@ -162,6 +162,13 @@ async function setup(){
   if(!OBR.isAvailable){$('#loading').classList.add('hidden');state.role='GM';setTheme();return}
 
   await new Promise(r=>OBR.onReady(r));
+  if(IS_PANEL){
+    onChatPanelState(panelState=>{
+      panelExpanded=Boolean(panelState?.expanded);
+      setMaximizeState(panelExpanded);
+      if(panelState?.visible)void requestHistory();
+    });
+  }
   const [nextRole,nextConnectionId,meta]=await Promise.all([
     OBR.player.getRole(),
     OBR.player.getConnectionId(),

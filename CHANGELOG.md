@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.3
+
+- Torna o ciclo de abrir, fechar e reabrir do painel independente de consultas de dimensão do popover.
+- Mantém a interface hidratada quando o Chat é fechado, reduzindo o custo das reaberturas e preservando o modo lateral como padrão.
+- Centraliza o estado lateral/maximizado no background da extensão para evitar disputas entre Action e painel.
+- Substitui o ícone de dado por um ícone de conversa branco, simples e legível na toolbar do Owlbear.
+- Preserva histórico, DT, rolagens, controles, responsividade e integração com Fichas.
+
 ## 0.8.2
 
 - Consolida o Chat em painel lateral persistente, com fechamento pelo X ou por um segundo clique na Action e controle dedicado para maximizar/restaurar.

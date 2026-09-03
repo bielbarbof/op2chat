@@ -2,8 +2,56 @@ import OBR,{buildText} from 'https://esm.unpkg.com/@owlbear-rodeo/sdk@3.1.0';
 import {CHARACTERS} from './characters.js';
 import {CHAT_CHANNEL,ROOM_STATE_KEY,RECENT_KEY,CHUNK_KEY,MAX_MESSAGE_LENGTH,mergeEntries,chunkEntries,makeId,bytes} from './chat-core.js';
 import {classifyOp2Result} from './roll.js';
+import {PANEL_CONTROL_CHANNEL,PANEL_MODE} from './panel-constants.js';
+import {getState as getPanelState,hideChatPanel,primeChatPanelGeometry,setChatPanelMode,syncChatPanelSize,toggleChatPanel,toggleChatPanelMaximize} from './panel-controller.js';
 
 let role='PLAYER',playerId='',connectionId='',roomId='',cachedHistory=[],writeQueue=Promise.resolve();
+
+const panelControlTasks=new Map();
+
+async function publishPanelState(requestId=''){
+  await OBR.broadcast.sendMessage(PANEL_CONTROL_CHANNEL,{
+    type:'panel-state',
+    requestId,
+    ...getPanelState(),
+  },{destination:'LOCAL'}).catch(()=>{});
+}
+
+function runPanelControl(data){
+  const action=data?.action;
+  if(action==='close')return hideChatPanel();
+  if(action==='toggle-maximize')return toggleChatPanelMaximize();
+  if(action==='set-mode'){
+    const next=data?.mode===PANEL_MODE.MAXIMIZED?PANEL_MODE.MAXIMIZED:PANEL_MODE.DOCKED;
+    return setChatPanelMode(next);
+  }
+  if(action==='sync')return syncChatPanelSize();
+  return Promise.resolve(getPanelState());
+}
+
+async function handlePanelControl(event){
+  const data=event.data||{};
+  if(data.type!=='panel-control')return;
+  const requestId=String(data.requestId||'');
+
+  // Only mutating controls need serialization/deduplication. A state request is
+  // answered immediately so the UI never waits behind history or panel work.
+  if(data.action==='state'){
+    await publishPanelState(requestId);
+    return;
+  }
+
+  let task=requestId?panelControlTasks.get(requestId):null;
+  if(!task){
+    task=Promise.resolve().then(()=>runPanelControl(data));
+    if(requestId){
+      panelControlTasks.set(requestId,task);
+      void task.finally(()=>setTimeout(()=>panelControlTasks.delete(requestId),3000)).catch(()=>{});
+    }
+  }
+  try{await task}catch{}
+  await publishPanelState(requestId);
+}
 function primePanelResources(){
   const resources=[
     '/?surface=panel',
@@ -11,9 +59,10 @@ function primePanelResources(){
     './launcher.js',
     './panel-constants.js',
     './panel.js',
-    './fonts.css?v=0.8.2',
-    './styles.css?v=0.8.2',
-    './roll-card.css?v=0.8.2',
+    './panel-controller.js',
+    './fonts.css?v=0.8.3',
+    './styles.css?v=0.8.3',
+    './roll-card.css?v=0.8.3',
     './app.js',
     './characters.js',
     './chat-core.js',
@@ -128,6 +177,16 @@ async function setup(){
   if(!OBR.isAvailable)return;
   primePanelResources();
   await new Promise(r=>OBR.onReady(r));
+
+  // Panel lifecycle is registered before identity/history work. Clicking the
+  // Action must never wait for scene scans or character synchronization.
+  OBR.broadcast.onMessage(PANEL_CONTROL_CHANNEL,handlePanelControl);
+  OBR.action.onOpenChange(open=>{
+    if(!open)return;
+    void OBR.action.close().catch(()=>{});
+    void toggleChatPanel().then(()=>publishPanelState()).catch(()=>{});
+  });
+  void primeChatPanelGeometry();
 
   identityReady=Promise.all([OBR.player.getRole(),OBR.player.getConnectionId()]).then(([nextRole,nextConnectionId])=>{
     role=nextRole;
